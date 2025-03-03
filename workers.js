@@ -53,30 +53,35 @@ function perform_check(check_id, check_obj)
 
 async function process_checkout_outcome(check_id, check_obj, check_outcome) 
 {
+    // console.log(`The server of ${check_obj.url} has responded with status code ${check_outcome.status_code}.`);
     const state = !check_outcome.error && check_outcome.status_code && check_obj.success_codes.includes(check_outcome.status_code) ? 'up' : 'down';
-    const time_of_last_check = Date.now();
+    const time_of_last_check = new Date(Date.now());
 
     check_obj.state = state;
     check_obj.time_of_last_check = time_of_last_check;
 
-    if (await update_check(check_id, check_obj)) {
-        console.log(`The check with id '${check_id}' has been updated.`);
-    } else {
-        console.error(`Unable to update the check with id '${check_id}'.`);
+    /* check_obj, check_outcome, state, time_of_check (-> review time_of_last_check) */
+
+    const res = await update_check(check_id, check_obj);
+    if (res.Error) {
+        console.error(res.Error);
     }
 }
 
 function start_background_workers() {
+    // TODO not sure this is a good position for this log. 
+    // It's not clear if the workers have started or not.
+    console.log('Background workers have started.');
     setInterval(async () => {
-        if (await write_checks_to_disk()) 
-        {
+        const res = await write_checks_to_disk();
+        if (res.Error) {
+            console.error('At start_background_workers():\n', res.Error);
+        } else {
             get_all_checks().forEach((check_obj, check_id) => {
                 perform_check(check_id, check_obj);
             });
-        } else {
-            console.error('Unable to write the checks to disk.');
         }
-    }, 10*1000);
+    }, 5*1000);
 }
 
 

@@ -30,19 +30,20 @@ async function handle_check(req_data, res_data) {
     }
 }
 
-function is_a_valid_check(check_obj, res_data) {
+function is_a_valid_check(check_JSON, res_data) {
+    let check_obj = null;
     try {
-        check_obj = JSON.parse(check_obj);
+        check_obj = JSON.parse(check_JSON);
     } catch (error) {
         res_data.status_code = 400;
         res_data.payload =  { 'Error': `The payload has not a valid JSON format. Thrown error: ${error.message}.` };
         return false;
     }
-
+    
     let { protocol, url, method, success_codes, timeout_seconds } = check_obj;
     // The user may type in a different case
-    if (protocol) protocol = protocol.toLowerCase();
-    if (method) method = method.toUpperCase();
+    protocol = protocol?.toLowerCase();
+    method = method?.toUpperCase();
 
     if (!['http', 'https'].includes(protocol)) {
         res_data.payload = { 'Error': `The specified protocol '${protocol}' is not supported.` };
@@ -82,7 +83,7 @@ async function handle_check_POST(req_data, res_data)
 {
     if (is_a_valid_check(req_data.payload, res_data)) 
     {
-        // Create check id
+        // Create the id of the check
         const ID_SIZE = 20;
         const id_chars = new Array(ID_SIZE);
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -92,16 +93,19 @@ async function handle_check_POST(req_data, res_data)
     
         const check_id = id_chars.join('');
         const check_obj = JSON.parse(req_data.payload);
+        check_obj.protocol = check_obj.protocol.toLowerCase();
+        check_obj.method = check_obj.method.toUpperCase();
         // state and time_of_last_check are the fields updated by the background workers (workers.js)
         check_obj.state = null, 
         check_obj.time_of_last_check = null
 
-        if (await add_new_check(check_id, check_obj)) {
-            res_data.status_code = 200;
-            res_data.payload = { 'Success': 'Check successfully appended.' };
-        } else {
+        const res = await add_new_check(check_id, check_obj);
+        if (res.Error) {
             res_data.status_code = 500;
-            res_data.payload = { 'Error': 'Unable to append the check.' };
+            res_data.payload = { 'Error': res.Error };
+        } else {
+            res_data.status_code = 200;
+            res_data.payload = { 'Success': 'Check successfully added.', 'id': check_id };
         }
     }
 }
@@ -110,14 +114,19 @@ async function handle_check_PUT(req_data, res_data) {
     const check_id = req_data.search_params.get('id');
     if (check_id && check_id.length === 20) 
     {
-        if (is_a_valid_check(req_data.payload, res_data)) {
-            // Update check
-            if (await update_check(check_id, JSON.parse(req_data.payload))) {
+        if (is_a_valid_check(req_data.payload, res_data)) 
+        {
+            const check_obj = JSON.parse(req_data.payload);
+            check_obj.protocol = check_obj.protocol.toLowerCase();
+            check_obj.method = check_obj.method.toUpperCase();
+
+            const res = await update_check(check_id, check_obj);
+            if (res.Error) {
+                res_data.status_code = 500;
+                res_data.payload = { 'Error': res.Error };
+            } else {
                 res_data.status_code = 200;
                 res_data.payload = { 'Success': 'Check successfully updated.' };
-            } else {
-                res_data.status_code = 500;
-                res_data.payload = { 'Error': 'Unable to update the check.' };
             }
         }
     } else {
@@ -130,18 +139,18 @@ async function handle_check_DELETE(req_data, res_data) {
     const check_id = req_data.search_params.get('id');
     if (check_id && check_id.length === 20) {
         // Delete check
-        if (await delete_check(check_id)) {
+        const res = await delete_check(check_id);
+        if (res.Error) {
+            res_data.status_code = 500;
+            res_data.payload = { 'Error': res.Error };
+        } else {
             res_data.status_code = 200;
             res_data.payload = { 'Success': 'Check successfully deleted.' };
-        } else {
-            res_data.status_code = 500;
-            res_data.payload = { 'Error': 'Unable to delete the check.' };
         }
     } else {
         res_data.status_code = 400;
         res_data.payload = { 'Bad Request': `The id '${check_id}' is invalid.`  };
     }
 }
-
 
 module.exports = { handle_check };

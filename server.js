@@ -10,22 +10,29 @@ server.on('request', (req, res) =>
     const url = new URL(req.url, 'http://localhost:' + PORT);
     const trimmed_path = url.pathname.replace(/^\/+|\/+$/g, '');
     const decoder = new StringDecoder('utf8');
-    const decoded_buffers = [];
+
+    /* At first, I used an array called decoded_buffers
+    to not everytime reassing the variable to a new string.
+    But, I've noticed the max buffer size is 64KB before the data is splitted in two packets.
+    So, storing the strings in an array to then concatenate them toghether instead of directly reassigning the variable to a new string,
+    does not seem at all an optimization given that for the data I expect to be sent,
+    the buffer will never be splitted in more packets of data. */
+    let decoded_buffer = '';
 
     req.on('data', (buffer) => {
-        decoded_buffers.push(decoder.write(buffer));
+        decoded_buffer += decoder.write(buffer);
     });
 
     req.on('end', async () => 
     {
-        decoded_buffers.push(decoder.end());
+        decoded_buffer += decoder.end();
 
         const req_data = {
             'trimmed_path': trimmed_path,
             'search_params': new URLSearchParams(url.searchParams),
             'method': req.method,
             'headers': req.headers,
-            'payload': decoded_buffers.join(''),
+            'payload': decoded_buffer,
         };
 
         const res_data = {
@@ -68,7 +75,7 @@ server.on('listening', () => {
 
 server.on('error', (e) => {
     if (e.code === 'EADDRINUSE') {
-        console.error('Address in use, retrying...');
+        console.log('Address in use, retrying...');
         setTimeout(() => {
             server.close();
             server.listen(PORT);

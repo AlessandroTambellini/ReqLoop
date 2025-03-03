@@ -15,9 +15,8 @@ async function store_checks_in_memory() {
             for (const [key, value] of Object.entries(checks_obj)) {
                 checks_map.set(key, value);
             }
-        } else {
-            console.log('The checks file is empty.');
         }
+        console.log('Checks have been loaded in memory.');
     } catch (error) {
         console.error(CHECKS_FILE_PATH + ' has malformed content.');
         console.error(error.message);
@@ -30,10 +29,9 @@ async function write_checks_to_disk() {
         // Indent each check on a separete line
         checks_JSON = checks_JSON.replaceAll('},', '},\n');
         await writeFile(CHECKS_FILE_PATH, checks_JSON);
-        return true;
+        return { 'Success': 'Checks have been written to disk.' };
     } catch (error) {
-        console.error(error.message);
-        return false;
+        return { 'Error': `Checks could not be written to disk with the following error message: ${error.message}.` };
     }
 }
 
@@ -44,30 +42,27 @@ function get_all_checks() {
 async function add_new_check(check_id, check_obj) {
     if (checks_map.size < MAX_NUMBER_OF_CHECKS) {
         checks_map.set(check_id, check_obj);
-        return true;
+        return { 'Success': 'Check successfully added.' };
     } else {
-        console.error(`The maximum number of checks (${MAX_NUMBER_OF_CHECKS}) has been reached.`);
-        return false;
+        return { 'Error': `The maximum number of checks (${MAX_NUMBER_OF_CHECKS}) has been reached.` };
     }
 }
 
 async function update_check(check_id, check_obj) {
     if (checks_map.has(check_id)) {
         checks_map.set(check_id, check_obj);
-        return true;
+        return { 'Success': 'Check successfully updated.' };
     } else {
-        console.error(`The check with id '${check_id}' does not exist.`);
-        return false;
+        return { 'Error': `The check with id '${check_id}' does not exist.` };
     }
 }
 
 async function delete_check(check_id) {
     if (checks_map.has(check_id)) {
         checks_map.delete(check_id);
-        return true;
+        return { 'Success': 'Check successfully deleted.' };
     } else {
-        console.error(`The check with id '${check_id}' does not exist.`);
-        return false;
+        return { 'Error': `The check with id '${check_id}' does not exist.` };
     }
 }
 
