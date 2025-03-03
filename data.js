@@ -26,7 +26,7 @@ async function store_checks_in_memory() {
 
 async function write_checks_to_disk() {
     try {
-        await writeFile(CHECKS_FILE_PATH, JSON.stringify(Object.fromEntries(checks_map)));
+        await writeFile(CHECKS_FILE_PATH, JSON.stringify(Object.fromEntries(checks_map), null, 4));
         return true;
     } catch (error) {
         console.error(error.message);
