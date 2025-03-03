@@ -26,7 +26,10 @@ async function store_checks_in_memory() {
 
 async function write_checks_to_disk() {
     try {
-        await writeFile(CHECKS_FILE_PATH, JSON.stringify(Object.fromEntries(checks_map), null, 4));
+        let checks_JSON = JSON.stringify(Object.fromEntries(checks_map));
+        // Indent each check on a separete line
+        checks_JSON = checks_JSON.replaceAll('},', '},\n');
+        await writeFile(CHECKS_FILE_PATH, checks_JSON);
         return true;
     } catch (error) {
         console.error(error.message);
