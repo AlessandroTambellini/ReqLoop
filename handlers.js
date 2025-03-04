@@ -101,7 +101,7 @@ async function handle_check_POST(req_data, res_data)
 
         const res = await add_new_check(check_id, check_obj);
         if (res.Error) {
-            res_data.status_code = 500;
+            res_data.status_code = 400;
             res_data.payload = { 'Error': res.Error };
         } else {
             res_data.status_code = 200;
@@ -122,7 +122,7 @@ async function handle_check_PUT(req_data, res_data) {
 
             const res = await update_check(check_id, check_obj);
             if (res.Error) {
-                res_data.status_code = 500;
+                res_data.status_code = 400;
                 res_data.payload = { 'Error': res.Error };
             } else {
                 res_data.status_code = 200;
@@ -141,7 +141,7 @@ async function handle_check_DELETE(req_data, res_data) {
         // Delete check
         const res = await delete_check(check_id);
         if (res.Error) {
-            res_data.status_code = 500;
+            res_data.status_code = 400;
             res_data.payload = { 'Error': res.Error };
         } else {
             res_data.status_code = 200;
