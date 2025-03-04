@@ -1,19 +1,96 @@
-// const { readFile } = require('node:fs/promises');
-// const { resolve } = require('node:path');
+const { readFile } = require('node:fs/promises');
+const { resolve } = require('node:path');
 const { add_new_check, update_check, delete_check } = require('./data');
+const util = require('node:util');
+const debuglog = util.debuglog('handlers');
 
-// async function get_index_page(res_data) {
-//     try {
-//         const page_path = resolve('./index.html');
-//         const page_content = await readFile(page_path, { encoding: 'utf8' });
-//         res_data.content_type = 'text/html';
-//         res_data.status_code = 200;
-//         res_data.payload = page_content;
-//     } catch (error) {
-//         res_data.status_code = 500;
-//         res_data.payload = error.message;
-//     }
-// }
+/*
+ *  
+ *  HTML Handlers
+ */
+
+async function checks_list(method, res_data) 
+{
+    if (method !== 'GET') {
+        res_data.status_code = 405;
+        return;
+    }
+
+    try {
+        const page_path = resolve('./index.html');
+        let page_content = await readFile(page_path, { encoding: 'utf8' });
+
+        const check_path = resolve('./checks.json');
+        const checks_JSON = await readFile('./checks.json', { encoding: 'utf8' });
+        const checks_obj = JSON.parse(checks_JSON);
+        let checks_HTML = [];
+        for (const [key, value] of Object.entries(checks_obj)) {
+            checks_HTML.push(`
+                <tr>
+                    <td>${value.protocol}</td>
+                    <td>${value.url}</td>
+                    <td>${value.method}</td>
+                    <td>${value.success_codes}</td>
+                    <td>${value.state}</td>
+                </tr>
+            `);
+        }
+
+        page_content = page_content.replace('{{ rows }}', checks_HTML.join(''));
+
+        res_data.status_code = 200;
+        res_data.payload = page_content;
+    } catch (error) {
+        res_data.status_code = 500;
+        res_data.payload = { 'Error': 'Unable to read the index page from disk.' };
+        debuglog(error.message);
+    }
+}
+
+async function assets(req_data, res_data) {
+    if (req_data.method !== 'GET') {
+        res_data.status_code = 405;
+        return;
+    }
+
+    const asset_name = req_data.trimmed_path.replace('assets/', '').trim();
+    if (asset_name.length > 0) {
+        const extension_idx = asset_name.lastIndexOf('.');
+        if (extension_idx === -1 || extension_idx === 0 || extension_idx === asset_name.length-1) {
+            res_data.status_code = 404;
+            res_data.payload = { 'Error': 'Invalid asset name.' };
+        }
+
+        const extension = asset_name.substring(extension_idx + 1);
+        if (extension === 'css') res_data.content_type = 'text/css';
+        else if (extension === 'svg') res_data.content_type = 'image/svg+xml';
+        else if (extension === 'js') res_data.content_type = 'text/javascript';
+        // TODO maybe plain?
+        
+        try {
+            const asset_content = await readFile('./assets/' + asset_name, { encoding: 'utf8' });
+            res_data.status_code = 200;
+            res_data.payload = asset_content;
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                res_data.status_code = 404;
+                res_data.payload = { 'Error': `There is no asset called '${asset_name}'.` };
+            } else {
+                res_data.status_code = 500;
+                debuglog(error);
+            }
+        }
+
+    } else {
+        res_data.status_code = 404;
+        res_data.payload = { 'Error': 'Invalid asset name.' };
+    }
+}
+
+/*
+ *  
+ *  JSON API Handlers
+ */
 
 async function handle_check(req_data, res_data) {
     if (req_data.method === 'GET') {
@@ -25,8 +102,7 @@ async function handle_check(req_data, res_data) {
     } else if (req_data.method === 'DELETE') {
         await handle_check_DELETE(req_data, res_data);
     } else {
-        res_data.status_code = 400;
-        res_data.payload = { 'Error': `The passed method '${req_data.method}' is not supported.` };
+        res_data.status_code = 405;
     }
 }
 
@@ -153,4 +229,4 @@ async function handle_check_DELETE(req_data, res_data) {
     }
 }
 
-module.exports = { handle_check };
+module.exports = { checks_list, handle_check, assets };
