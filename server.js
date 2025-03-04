@@ -1,6 +1,8 @@
 const http = require('node:http');
 const { StringDecoder } = require('node:string_decoder');
 const { handle_check } = require('./handlers');
+const util = require('node:util');
+const debuglog = util.debuglog('server');
 
 const PORT = 8000;
 const server = http.createServer();
@@ -65,7 +67,9 @@ server.on('request', (req, res) =>
 
         res.setHeader('Content-Type', res_data.content_type);
         res.writeHead(res_data.status_code);
-        res.end(payload_string + '\n'); // given I use curl on the terminal, I want the string to go ahead
+        res.end(payload_string + '\n'); // given I test with curl on the terminal, I want the string to go ahead
+
+        debuglog(`${req.method} /${trimmed_path} ${res_data.status_code}`);
     });
 });
 

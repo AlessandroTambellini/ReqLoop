@@ -96,8 +96,8 @@ async function handle_check_POST(req_data, res_data)
         check_obj.protocol = check_obj.protocol.toLowerCase();
         check_obj.method = check_obj.method.toUpperCase();
         // state and time_of_last_check are the fields updated by the background workers (workers.js)
-        check_obj.state = null, 
-        check_obj.time_of_last_check = null
+        check_obj.state = null;
+        check_obj.time_of_last_check = null;
 
         const res = await add_new_check(check_id, check_obj);
         if (res.Error) {

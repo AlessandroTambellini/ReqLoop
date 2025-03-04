@@ -1,6 +1,8 @@
 const http = require('node:http');
 const https = require('node:https');
 const { get_all_checks, update_check, write_checks_to_disk } = require('./data');
+const util = require('node:util');
+const debuglog = util.debuglog('workers');
 
 function perform_check(check_id, check_obj) 
 {
@@ -24,27 +26,27 @@ function perform_check(check_id, check_obj)
     
     let outcome_sent = false;
 
-    req.on('response', (res) => {
-        check_outcome.status_code = res.statusCode;
+    req.on('response', async (res) => {
         if (!outcome_sent) {
             outcome_sent = true;
-            process_checkout_outcome(check_id, check_obj, check_outcome);
+            check_outcome.status_code = res.statusCode;
+            await process_checkout_outcome(check_id, check_obj, check_outcome);
         }
     });
 
-    req.on('timeout', () => {
-        check_outcome.error = { 'error': true, 'value': 'timeout' };
+    req.on('timeout', async () => {
         if (!outcome_sent) {
             outcome_sent = true;
-            process_checkout_outcome(check_id, check_obj, check_outcome);
+            check_outcome.error = 'ERROR: ' + 'timeout';
+            await process_checkout_outcome(check_id, check_obj, check_outcome);
         }
     });
 
-    req.on('error', (e) => {
-        check_outcome.error = { 'error': true, 'value': e };
+    req.on('error', async (e) => {
         if (!outcome_sent) {
             outcome_sent = true;
-            process_checkout_outcome(check_id, check_obj, check_outcome);
+            check_outcome.error = 'ERROR: ' + e.message;
+            await process_checkout_outcome(check_id, check_obj, check_outcome);
         }
     });
 
@@ -53,14 +55,14 @@ function perform_check(check_id, check_obj)
 
 async function process_checkout_outcome(check_id, check_obj, check_outcome) 
 {
-    // console.log(`The server of ${check_obj.url} has responded with status code ${check_outcome.status_code}.`);
     const state = !check_outcome.error && check_outcome.status_code && check_obj.success_codes.includes(check_outcome.status_code) ? 'up' : 'down';
     const time_of_last_check = new Date(Date.now());
 
     check_obj.state = state;
     check_obj.time_of_last_check = time_of_last_check;
 
-    /* check_obj, check_outcome, state, time_of_check (-> review time_of_last_check) */
+    debuglog(`${check_id} (${check_obj.url}): ${check_outcome.status_code} ${state} ${time_of_last_check.toJSON()}`);
+    if (check_outcome.error) debuglog(`${check_outcome.error}`);
 
     const res = await update_check(check_id, check_obj);
     if (res.Error) {
@@ -68,10 +70,10 @@ async function process_checkout_outcome(check_id, check_obj, check_outcome)
     }
 }
 
-function start_background_workers() 
+async function start_background_workers() 
 {
     console.log('Background workers have started.');
-    
+
     const start_background_workers_aux = async () => {
         const res = await write_checks_to_disk();
         if (res.Error) {
@@ -84,7 +86,7 @@ function start_background_workers()
         }
     }
 
-    start_background_workers_aux();
+    await start_background_workers_aux();
     setInterval(start_background_workers_aux, 5*1000);
 }
 
