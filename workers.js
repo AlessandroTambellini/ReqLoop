@@ -68,20 +68,24 @@ async function process_checkout_outcome(check_id, check_obj, check_outcome)
     }
 }
 
-function start_background_workers() {
-    // TODO not sure this is a good position for this log. 
-    // It's not clear if the workers have started or not.
+function start_background_workers() 
+{
     console.log('Background workers have started.');
-    setInterval(async () => {
+    
+    const start_background_workers_aux = async () => {
         const res = await write_checks_to_disk();
         if (res.Error) {
             console.error('At start_background_workers():\n', res.Error);
         } else {
-            get_all_checks().forEach((check_obj, check_id) => {
+            const checks_map = get_all_checks();
+            checks_map.forEach((check_obj, check_id) => {
                 perform_check(check_id, check_obj);
             });
         }
-    }, 5*1000);
+    }
+
+    start_background_workers_aux();
+    setInterval(start_background_workers_aux, 5*1000);
 }
 
 
