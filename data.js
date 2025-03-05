@@ -48,9 +48,13 @@ function add_new_check(check_id, check_obj) {
     }
 }
 
-function update_check(check_id, check_obj) {
+function update_check(check_id, new_check_obj) {
     if (checks_map.has(check_id)) {
-        checks_map.set(check_id, check_obj);
+        let curr_check_obj = checks_map.get(check_id);
+        // Retrieve the current state of the check
+        new_check_obj.state = curr_check_obj.state;
+        new_check_obj.time_of_last_check = curr_check_obj.time_of_last_check;
+        checks_map.set(check_id, new_check_obj);
         return { 'Success': 'Check successfully updated.' };
     } else {
         return { 'Error': `The check with id '${check_id}' does not exist.` };
