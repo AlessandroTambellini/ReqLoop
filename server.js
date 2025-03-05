@@ -34,13 +34,13 @@ server.on('request', (req, res) =>
             'search_params': new URLSearchParams(url.searchParams),
             'method': req.method,
             'headers': req.headers,
-            'payload': decoded_buffer,
+            'payload': decoded_buffer
         };
 
         const res_data = {
-            'content_type': '',
-            'status_code': -1,
-            'payload': {},
+            'content_type': 'application/json',
+            'status_code': 500,
+            'payload': { 'Error': 'An unknown error has occured.' }
         };
 
         // Router
@@ -77,8 +77,11 @@ server.on('request', (req, res) =>
 
         const payload_string = res_data.content_type === 'application/json' ? JSON.stringify(res_data.payload) + '\n' : res_data.payload;
 
-        res.setHeader('Content-Type', res_data.content_type);
-        res.writeHead(res_data.status_code);
+        res.strictContentLength = true;
+        res.writeHead(res_data.status_code, {
+            'Content-Length': Buffer.byteLength(payload_string),
+            'Content-Type': res_data.content_type,
+        });
         res.end(payload_string);
 
         debuglog(`${req.method} /${trimmed_path} ${res_data.status_code}`);
