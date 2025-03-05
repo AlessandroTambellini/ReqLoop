@@ -39,7 +39,7 @@ function get_all_checks() {
     return new Map(checks_map); // I don't know if it's necessary to clone the checks map
 }
 
-async function add_new_check(check_id, check_obj) {
+function add_new_check(check_id, check_obj) {
     if (checks_map.size < MAX_NUMBER_OF_CHECKS) {
         checks_map.set(check_id, check_obj);
         return { 'Success': 'Check successfully added.' };
@@ -48,7 +48,7 @@ async function add_new_check(check_id, check_obj) {
     }
 }
 
-async function update_check(check_id, check_obj) {
+function update_check(check_id, check_obj) {
     if (checks_map.has(check_id)) {
         checks_map.set(check_id, check_obj);
         return { 'Success': 'Check successfully updated.' };
@@ -57,7 +57,7 @@ async function update_check(check_id, check_obj) {
     }
 }
 
-async function delete_check(check_id) {
+function delete_check(check_id) {
     if (checks_map.has(check_id)) {
         checks_map.delete(check_id);
         return { 'Success': 'Check successfully deleted.' };

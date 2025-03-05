@@ -59,7 +59,7 @@ server.on('request', (req, res) =>
                 // checksEdit
                 break;
             case 'api/check':
-                await handle_check(req_data, res_data);
+                handle_check(req_data, res_data);
                 break;
             default:
                 if (trimmed_path.includes('assets/')) {

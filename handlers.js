@@ -93,15 +93,15 @@ async function assets(req_data, res_data) {
  *  JSON API Handlers
  */
 
-async function handle_check(req_data, res_data) {
+function handle_check(req_data, res_data) {
     if (req_data.method === 'GET') {
-        await handle_check_GET(req_data, res_data);
+        handle_check_GET(req_data, res_data);
     } else if (req_data.method === 'POST') {
-        await handle_check_POST(req_data, res_data);
+        handle_check_POST(req_data, res_data);
     } else if (req_data.method === 'PUT') {
-        await handle_check_PUT(req_data, res_data);
+        handle_check_PUT(req_data, res_data);
     } else if (req_data.method === 'DELETE') {
-        await handle_check_DELETE(req_data, res_data);
+        handle_check_DELETE(req_data, res_data);
     } else {
         res_data.status_code = 405;
     }
@@ -146,7 +146,7 @@ function is_a_valid_check(check_JSON, res_data) {
     }
 }
 
-async function handle_check_GET(req_data, res_data) {
+function handle_check_GET(req_data, res_data) {
     const check_id = req_data.search_params.get('id');
     if (check_id && check_id.length === 20) {
         
@@ -156,7 +156,7 @@ async function handle_check_GET(req_data, res_data) {
     }
 }
 
-async function handle_check_POST(req_data, res_data) 
+function handle_check_POST(req_data, res_data) 
 {
     if (is_a_valid_check(req_data.payload, res_data)) 
     {
@@ -176,7 +176,7 @@ async function handle_check_POST(req_data, res_data)
         check_obj.state = null;
         check_obj.time_of_last_check = null;
 
-        const res = await add_new_check(check_id, check_obj);
+        const res = add_new_check(check_id, check_obj);
         if (res.Error) {
             res_data.status_code = 400;
             res_data.payload = { 'Error': res.Error };
@@ -187,7 +187,7 @@ async function handle_check_POST(req_data, res_data)
     }
 }
 
-async function handle_check_PUT(req_data, res_data) {
+function handle_check_PUT(req_data, res_data) {
     const check_id = req_data.search_params.get('id');
     if (check_id && check_id.length === 20) 
     {
@@ -197,7 +197,7 @@ async function handle_check_PUT(req_data, res_data) {
             check_obj.protocol = check_obj.protocol.toLowerCase();
             check_obj.method = check_obj.method.toUpperCase();
 
-            const res = await update_check(check_id, check_obj);
+            const res = update_check(check_id, check_obj);
             if (res.Error) {
                 res_data.status_code = 400;
                 res_data.payload = { 'Error': res.Error };
@@ -212,11 +212,10 @@ async function handle_check_PUT(req_data, res_data) {
     }
 }
 
-async function handle_check_DELETE(req_data, res_data) {
+function handle_check_DELETE(req_data, res_data) {
     const check_id = req_data.search_params.get('id');
     if (check_id && check_id.length === 20) {
-        // Delete check
-        const res = await delete_check(check_id);
+        const res = delete_check(check_id);
         if (res.Error) {
             res_data.status_code = 400;
             res_data.payload = { 'Error': res.Error };

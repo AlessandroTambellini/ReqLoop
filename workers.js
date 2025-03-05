@@ -26,34 +26,34 @@ function perform_check(check_id, check_obj)
     
     let outcome_sent = false;
 
-    req.on('response', async (res) => {
+    req.on('response', (res) => {        
         if (!outcome_sent) {
             outcome_sent = true;
             check_outcome.status_code = res.statusCode;
-            await process_checkout_outcome(check_id, check_obj, check_outcome);
+            process_checkout_outcome(check_id, check_obj, check_outcome);
         }
     });
-
-    req.on('timeout', async () => {
+    
+    req.on('timeout', () => {
         if (!outcome_sent) {
             outcome_sent = true;
             check_outcome.error = 'ERROR: ' + 'timeout';
-            await process_checkout_outcome(check_id, check_obj, check_outcome);
+            process_checkout_outcome(check_id, check_obj, check_outcome);
         }
     });
 
-    req.on('error', async (e) => {
+    req.on('error', (e) => {
         if (!outcome_sent) {
             outcome_sent = true;
             check_outcome.error = 'ERROR: ' + e.message;
-            await process_checkout_outcome(check_id, check_obj, check_outcome);
+            process_checkout_outcome(check_id, check_obj, check_outcome);
         }
     });
 
     req.end();
 }
 
-async function process_checkout_outcome(check_id, check_obj, check_outcome) 
+function process_checkout_outcome(check_id, check_obj, check_outcome) 
 {
     const state = !check_outcome.error && check_outcome.status_code && check_obj.success_codes.includes(check_outcome.status_code) ? 'up' : 'down';
     const time_of_last_check = new Date(Date.now());
@@ -64,7 +64,7 @@ async function process_checkout_outcome(check_id, check_obj, check_outcome)
     debuglog(`${check_id} (${check_obj.url}): ${check_outcome.status_code} ${state} ${time_of_last_check.toJSON()}`);
     if (check_outcome.error) debuglog(`${check_outcome.error}`);
 
-    const res = await update_check(check_id, check_obj);
+    const res = update_check(check_id, check_obj);
     if (res.Error) {
         console.error(res.Error);
     }
