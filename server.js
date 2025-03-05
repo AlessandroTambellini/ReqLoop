@@ -40,18 +40,16 @@ server.on('request', (req, res) =>
         const res_data = {
             'content_type': 'application/json',
             'status_code': 500,
-            'payload': { 'Error': 'An unknown error has occured.' }
+            'payload': {}
         };
 
         // Router
         switch (trimmed_path) {
             case 'ping':
-                res_data.content_type = 'application/json';
                 res_data.status_code = 200;
                 break;
             case '':
             case 'checks/all':
-                res_data.content_type = 'text/html';
                 await checks_list(req_data.method, res_data);
                 break;
             case 'checks/create':
@@ -61,7 +59,6 @@ server.on('request', (req, res) =>
                 // checksEdit
                 break;
             case 'api/check':
-                res_data.content_type = 'application/json';
                 await handle_check(req_data, res_data);
                 break;
             default:
@@ -69,13 +66,12 @@ server.on('request', (req, res) =>
                     await assets(req_data, res_data);
                 } else {
                     res_data.status_code = 404;
-                    res_data.content_type = 'application/json';
                     res_data.payload = {'Error': `The path '${trimmed_path}' is not available.`};
                 }
-                break;
         }
 
-        const payload_string = res_data.content_type === 'application/json' ? JSON.stringify(res_data.payload) + '\n' : res_data.payload;
+        const payload_string = res_data.content_type === 'application/json' ? JSON.stringify(res_data.payload) : res_data.payload;
+        console.log(payload_string);
 
         res.strictContentLength = true;
         res.writeHead(res_data.status_code, {

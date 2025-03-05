@@ -38,6 +38,7 @@ async function checks_list(method, res_data)
 
         page_content = page_content.replace('{{ rows }}', checks_HTML.join(''));
 
+        res_data.content_type = 'text/html';
         res_data.status_code = 200;
         res_data.payload = page_content;
     } catch (error) {
