@@ -26,8 +26,6 @@ async function store_checks_in_memory() {
 async function write_checks_to_disk() {
     try {
         let checks_JSON = JSON.stringify(Object.fromEntries(checks_map));
-        // Indent each check on a separete line
-        checks_JSON = checks_JSON.replaceAll('},', '},\n');
         await writeFile(CHECKS_FILE_PATH, checks_JSON);
         return { 'Success': 'Checks have been written to disk.' };
     } catch (error) {
@@ -41,6 +39,8 @@ function get_all_checks() {
 
 function add_new_check(check_id, check_obj) {
     if (checks_map.size < MAX_NUMBER_OF_CHECKS) {
+        /* Given that in practice it never happens,
+        I do not check if the passed check_id already exists in the map. */
         checks_map.set(check_id, check_obj);
         return { 'Success': 'Check successfully added.' };
     } else {
