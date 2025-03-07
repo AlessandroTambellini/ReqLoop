@@ -1,6 +1,6 @@
 const http = require('node:http');
 const https = require('node:https');
-const { get_all_checks, update_check, write_checks_to_disk } = require('./data');
+const { get_copy_of_checks_map, update_check, write_checks_to_disk } = require('./data');
 const util = require('node:util');
 const debuglog = util.debuglog('workers');
 const { StringDecoder } = require('node:string_decoder');
@@ -66,8 +66,7 @@ async function start_background_workers()
         if (res.Error) {
             console.error('At start_background_workers():\n', res.Error);
         } else {
-            const checks_map = get_all_checks();
-            checks_map.forEach((check_obj, check_id) => {
+            get_copy_of_checks_map().forEach((check_obj, check_id) => {
                 perform_check(check_id, check_obj);
             });
         }
