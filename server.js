@@ -1,6 +1,6 @@
 const http = require('node:http');
 const { StringDecoder } = require('node:string_decoder');
-const { checks_list, handle_check, assets } = require('./handlers');
+const { dashboard, handle_check, assets, check_create, check_edit, retrieve_all_checks } = require('./handlers');
 const util = require('node:util');
 const debuglog = util.debuglog('server');
 
@@ -9,6 +9,8 @@ const server = http.createServer();
 
 server.on('request', (req, res) => 
 {
+    console.log(req.url);
+    
     const url = new URL(req.url, 'http://localhost:' + PORT);
     const trimmed_path = url.pathname.replace(/^\/+|\/+$/g, '');
     const decoder = new StringDecoder('utf8');
@@ -49,17 +51,21 @@ server.on('request', (req, res) =>
                 res_data.status_code = 200;
                 break;
             case '':
-            case 'checks/all':
-                await checks_list(req_data.method, res_data);
+            case 'check/all':
+            case 'dashboard':
+                await dashboard(req_data.method, res_data);
                 break;
-            case 'checks/create':
-                // checksCreate
+            case 'check/create':
+                await check_create(req_data.method, res_data);
                 break;
-            case 'checks/edit':
-                // checksEdit
+            case 'check/edit':
+                await check_edit(req_data.method, res_data);
                 break;
             case 'api/check':
                 handle_check(req_data, res_data);
+                break;
+            case 'api/check/all':
+                retrieve_all_checks(req_data.method, res_data);
                 break;
             default:
                 if (trimmed_path.includes('assets/')) {
@@ -71,7 +77,6 @@ server.on('request', (req, res) =>
         }
 
         const payload_string = res_data.content_type === 'application/json' ? JSON.stringify(res_data.payload) : res_data.payload;
-        console.log(payload_string);
 
         res.strictContentLength = true;
         res.writeHead(res_data.status_code, {

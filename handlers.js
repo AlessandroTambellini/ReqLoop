@@ -1,6 +1,7 @@
 const { readFile } = require('node:fs/promises');
 const { resolve } = require('node:path');
-const { add_new_check, update_check, delete_check } = require('./data');
+const dns = require('node:dns');
+const { add_new_check, update_check, delete_check, get_all_checks } = require('./data');
 const util = require('node:util');
 const debuglog = util.debuglog('handlers');
 
@@ -9,7 +10,49 @@ const debuglog = util.debuglog('handlers');
  *  HTML Handlers
  */
 
-async function checks_list(method, res_data) 
+async function check_edit(method, res_data) {
+    if (method !== 'GET') {
+        res_data.status_code = 405;
+        return;
+    }
+
+    try {
+        let _header = await readFile('./templates/_header.html', { encoding: 'utf8' });
+        let _footer = await readFile('./templates/_footer.html', { encoding: 'utf8' });
+        let page_content = await readFile('./templates/check_edit.html', { encoding: 'utf8' });
+
+        res_data.content_type = 'text/html';
+        res_data.status_code = 200;
+        res_data.payload = _header + page_content + _footer;
+    } catch (error) {
+        res_data.status_code = 500;
+        res_data.payload = { 'Error': 'Unable to read HTML page from disk.' };
+        debuglog(error);
+    }
+}
+
+async function check_create(method, res_data) {
+    if (method !== 'GET') {
+        res_data.status_code = 405;
+        return;
+    }
+
+    try {
+        let _header = await readFile('./templates/_header.html', { encoding: 'utf8' });
+        let _footer = await readFile('./templates/_footer.html', { encoding: 'utf8' });
+        let page_content = await readFile('./templates/check_create.html', { encoding: 'utf8' });
+
+        res_data.content_type = 'text/html';
+        res_data.status_code = 200;
+        res_data.payload = _header + page_content + _footer;
+    } catch (error) {
+        res_data.status_code = 500;
+        res_data.payload = { 'Error': 'Unable to read HTML page from disk.' };
+        debuglog(error);
+    }
+}
+
+async function dashboard(method, res_data) 
 {
     if (method !== 'GET') {
         res_data.status_code = 405;
@@ -17,33 +60,35 @@ async function checks_list(method, res_data)
     }
 
     try {
-        const page_path = resolve('./index.html');
-        let page_content = await readFile(page_path, { encoding: 'utf8' });
+        let _header = await readFile('./templates/_header.html', { encoding: 'utf8' });
+        let _footer = await readFile('./templates/_footer.html', { encoding: 'utf8' });
+        let page_content = await readFile('./templates/dashboard.html', { encoding: 'utf8' });
 
-        const check_path = resolve('./checks.json');
-        const checks_JSON = await readFile('./checks.json', { encoding: 'utf8' });
-        const checks_obj = JSON.parse(checks_JSON);
-        let checks_HTML = [];
-        for (const [key, value] of Object.entries(checks_obj)) {
-            checks_HTML.push(`
-                <tr>
-                    <td>${value.protocol}</td>
-                    <td>${value.url}</td>
-                    <td>${value.method}</td>
-                    <td>${value.success_codes}</td>
-                    <td>${value.state}</td>
-                </tr>
-            `);
-        }
+        // const check_path = resolve('./checks.json');
+        // const checks_JSON = await readFile('./checks.json', { encoding: 'utf8' });
+        // const checks_obj = JSON.parse(checks_JSON);
+        // let checks_HTML = [];
+        // for (const [key, value] of Object.entries(checks_obj)) {
+        //     checks_HTML.push(`
+        //         <tr>
+        //             <td>${value.protocol}</td>
+        //             <td>${value.url}</td>
+        //             <td>${value.method}</td>
+        //             <td>${value.res_status_code}</td>
+        //             <td>${value.res_time}</td>
+        //             <td>${value.res_err_code}</td>
+        //         </tr>
+        //     `);
+        // }
 
-        page_content = page_content.replace('{{ rows }}', checks_HTML.join(''));
+        // page_content = page_content.replace('{{ rows }}', checks_HTML.join(''));
 
         res_data.content_type = 'text/html';
         res_data.status_code = 200;
-        res_data.payload = page_content;
+        res_data.payload = _header + page_content + _footer;
     } catch (error) {
         res_data.status_code = 500;
-        res_data.payload = { 'Error': 'Unable to read the index page from disk.' };
+        res_data.payload = { 'Error': 'Unable to read HTML page from disk.' };
         debuglog(error.message);
     }
 }
@@ -93,6 +138,18 @@ async function assets(req_data, res_data) {
  *  JSON API Handlers
  */
 
+function retrieve_all_checks(method, res_data) {
+    if (method !== 'GET') {
+        res_data.status_code = 405;
+        return;
+    }
+
+    let checks_map = get_all_checks();
+    let checks_obj = Object.fromEntries(checks_map);
+    res_data.status_code = 200;
+    res_data.payload = checks_obj;
+}
+
 function handle_check(req_data, res_data) {
     if (req_data.method === 'GET') {
         handle_check_GET(req_data, res_data);
@@ -117,27 +174,29 @@ function is_a_valid_check(check_JSON, res_data) {
         return false;
     }
     
-    let { protocol, url, method, success_codes, timeout_seconds } = check_obj;
+    let { url, method } = check_obj;
     // The user may type in a different case
-    protocol = protocol?.toLowerCase();
     method = method?.toUpperCase();
 
-    if (!['http', 'https'].includes(protocol)) {
-        res_data.payload = { 'Error': `The specified protocol '${protocol}' is not supported.` };
-    } 
-    else if (!url || url.length < 1) {
-        res_data.payload = { 'Error': `The specified url '${url}' is not a valid url.` };
+    try {
+        let url_obj = new URL(url);
+        let protocol = url_obj.protocol.split(':')[0];
+        if (!['http', 'https'].includes(protocol)) {
+            res_data.payload = { 'Error': `The specified protocol '${protocol}' is not supported.` };
+        }
+        dns.lookup(url_obj.hostname, (err) => {
+            if (err) {
+                res_data.payload = { 'Error': `Unable to lookup specified url '${url}'. Error code: ${err.code}.` };
+            }
+        });
+    } catch (error) {
+        res_data.payload = { 'Error': `The specified url '${url}' is not a valid url. Error code: ${error.code}.` };
     }
-    else if (!['GET', 'POST', 'PUT', 'DELETE'].includes(method)) {
+
+    if (!['GET', 'POST', 'PUT', 'DELETE'].includes(method)) {
         res_data.payload = { 'Error': `The specified method '${method}' is not allowed.` };
-    } 
-    else if (!(success_codes instanceof Array) || success_codes.length < 1) {
-        res_data.payload = { 'Error': `Missing required success_codes for the check.` };
-    } 
-    else if (!timeout_seconds || timeout_seconds < 1 || timeout_seconds > 5) {
-        res_data.payload = { 'Error': `The specified timeout_seconds '${timeout_seconds}' is invalid. It has to be a number between 1 and 5.` };
     }
-    
+
     if (res_data.payload.Error) {
         res_data.status_code = 400;
         return false;
@@ -170,11 +229,7 @@ function handle_check_POST(req_data, res_data)
     
         const check_id = id_chars.join('');
         const check_obj = JSON.parse(req_data.payload);
-        check_obj.protocol = check_obj.protocol.toLowerCase();
         check_obj.method = check_obj.method.toUpperCase();
-        // state and time_of_last_check are the fields updated by the background workers (workers.js)
-        check_obj.state = null;
-        check_obj.time_of_last_check = null;
 
         const res = add_new_check(check_id, check_obj);
         if (res.Error) {
@@ -194,7 +249,6 @@ function handle_check_PUT(req_data, res_data) {
         if (is_a_valid_check(req_data.payload, res_data)) 
         {
             const check_obj = JSON.parse(req_data.payload);
-            check_obj.protocol = check_obj.protocol.toLowerCase();
             check_obj.method = check_obj.method.toUpperCase();
 
             const res = update_check(check_id, check_obj);
@@ -229,4 +283,4 @@ function handle_check_DELETE(req_data, res_data) {
     }
 }
 
-module.exports = { checks_list, handle_check, assets };
+module.exports = { dashboard, handle_check, assets, check_create, check_edit, retrieve_all_checks };

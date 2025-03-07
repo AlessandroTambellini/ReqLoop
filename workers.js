@@ -3,71 +3,58 @@ const https = require('node:https');
 const { get_all_checks, update_check, write_checks_to_disk } = require('./data');
 const util = require('node:util');
 const debuglog = util.debuglog('workers');
+const { StringDecoder } = require('node:string_decoder');
+const decoder = new StringDecoder('utf8');
 
 function perform_check(check_id, check_obj) 
 {
-    const parsed_url = new URL(`${check_obj.protocol}://${check_obj.url}`);
+    const url_obj = new URL(check_obj.url);
 
-    const check_outcome = {
-        'status_code': null,
-        'error': null
-    };
-
+    // for put and post requests
     const req_options = {
-        'protocol' : check_obj.protocol + ':',
-        'hostname' : parsed_url.hostname,
-        'method' : check_obj.method,
-        'path' : parsed_url.pathname + parsed_url.search,
-        'timeout' : check_obj.timeout_seconds * 1000
+        'method': check_obj.method,
+        'payload': null
     };
     
-    const module_to_use = check_obj.protocol === 'http' ? http : https;
-    const req = module_to_use.request(req_options);
-    
-    let outcome_sent = false;
+    const module_to_use = url_obj.protocol.split(':')[0] === 'http' ? http : https;
+    const req = module_to_use.request(url_obj);
+    check_obj.req_time = Date.now();
 
-    req.on('response', (res) => {        
-        if (!outcome_sent) {
-            outcome_sent = true;
-            check_outcome.status_code = res.statusCode;
-            process_checkout_outcome(check_id, check_obj, check_outcome);
-        }
-    });
-    
-    req.on('timeout', () => {
-        if (!outcome_sent) {
-            outcome_sent = true;
-            check_outcome.error = 'ERROR: ' + 'timeout';
-            process_checkout_outcome(check_id, check_obj, check_outcome);
-        }
+    /* To update the check I listen just for the 'response' and 'error' events but,
+    they are mutually exclusive. If you fires, the other will not.
+    So, the variable res_obj_sent is useless. */
+
+    req.on('response', async (res) => 
+    {    
+        debuglog(`response: ${check_id} (${check_obj.url})`);
+        check_obj.res_status_code = res.statusCode;
+        check_obj.res_time = Date.now();
+        
+        // Consume the response data
+        let decoded_buffer = '';
+        res.on('data', (chunk) => {
+            decoded_buffer += decoder.write(chunk);
+        });
+
+        res.on('end', (chunk) => {
+            decoded_buffer += decoder.end(chunk);
+            // console.log(check_obj.url, decoded_buffer);
+            update_check(check_id, check_obj);
+        });
     });
 
-    req.on('error', (e) => {
-        if (!outcome_sent) {
-            outcome_sent = true;
-            check_outcome.error = 'ERROR: ' + e.message;
-            process_checkout_outcome(check_id, check_obj, check_outcome);
-        }
+    req.on('error', (err) => 
+    {
+        console.error('error: ' + err);
+        check_obj.res_err_code = err.code;
+        update_check(check_id, check_obj);
+    });
+
+    req.on('close', () => {
+        // console.log('The connection for ' + check_obj.url + ' has been closed.');
     });
 
     req.end();
-}
-
-function process_checkout_outcome(check_id, check_obj, check_outcome) 
-{
-    const state = !check_outcome.error && check_outcome.status_code && check_obj.success_codes.includes(check_outcome.status_code) ? 'up' : 'down';
-    const time_of_last_check = new Date(Date.now());
-
-    check_obj.state = state;
-    check_obj.time_of_last_check = time_of_last_check;
-
-    debuglog(`${check_id} (${check_obj.url}): ${check_outcome.status_code} ${state} ${time_of_last_check.toJSON()}`);
-    if (check_outcome.error) debuglog(`${check_outcome.error}`);
-
-    const res = update_check(check_id, check_obj);
-    if (res.Error) {
-        console.error(res.Error);
-    }
 }
 
 async function start_background_workers() 

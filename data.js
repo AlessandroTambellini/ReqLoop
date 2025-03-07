@@ -52,11 +52,15 @@ function update_check(check_id, new_check_obj) {
     if (checks_map.has(check_id)) {
         let curr_check_obj = checks_map.get(check_id);
         // Retrieve the current state of the check
-        new_check_obj.state = curr_check_obj.state;
-        new_check_obj.time_of_last_check = curr_check_obj.time_of_last_check;
+        // new_check_obj.state = curr_check_obj.state;
+        // new_check_obj.time_of_last_check = curr_check_obj.time_of_last_check;
         checks_map.set(check_id, new_check_obj);
         return { 'Success': 'Check successfully updated.' };
     } else {
+        /* This function is used by both the background workers and 
+        the JSON API handler. So, in the fist case, I just want to log the error,
+        while in the second one, I want to return it to the caller. */
+        console.error(`The check with id '${check_id}' does not exist.`);
         return { 'Error': `The check with id '${check_id}' does not exist.` };
     }
 }
