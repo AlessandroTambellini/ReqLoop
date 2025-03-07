@@ -3,17 +3,17 @@ const { StringDecoder } = require('node:string_decoder');
 const { dashboard, handle_check, assets, check_create, check_edit, retrieve_all_checks } = require('./handlers');
 const util = require('node:util');
 const debuglog = util.debuglog('server');
+const decoder = new StringDecoder('utf8');
 
 const PORT = 8000;
 const server = http.createServer();
 
 server.on('request', (req, res) => 
 {
-    console.log(req.url);
-    
-    const url = new URL(req.url, 'http://localhost:' + PORT);
-    const trimmed_path = url.pathname.replace(/^\/+|\/+$/g, '');
-    const decoder = new StringDecoder('utf8');
+    // Sanitize the url: https://datatracker.ietf.org/doc/html/rfc3986
+    let url = req.url.replace(/[^a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]/g, '');
+    let url_obj = new URL(url, 'http://localhost:' + PORT);
+    let trimmed_pathname = url_obj.pathname.replace(/^\/+|\/+$/g, '');
 
     /* At first, I used an array called decoded_buffers
     to not everytime reassing the variable to a new string.
@@ -31,9 +31,10 @@ server.on('request', (req, res) =>
     {
         decoded_buffer += decoder.end();
 
+        // Mah, most of this data is actually anused.
         const req_data = {
-            'trimmed_path': trimmed_path,
-            'search_params': new URLSearchParams(url.searchParams),
+            'trimmed_pathname': trimmed_pathname,
+            'search_params': new URLSearchParams(url_obj.searchParams),
             'method': req.method,
             'headers': req.headers,
             'payload': decoded_buffer
@@ -46,7 +47,7 @@ server.on('request', (req, res) =>
         };
 
         // Router
-        switch (trimmed_path) {
+        switch (trimmed_pathname) {
             case 'ping':
                 res_data.status_code = 200;
                 break;
@@ -68,11 +69,11 @@ server.on('request', (req, res) =>
                 retrieve_all_checks(req_data.method, res_data);
                 break;
             default:
-                if (trimmed_path.includes('assets/')) {
+                if (trimmed_pathname.includes('assets/')) {
                     await assets(req_data, res_data);
                 } else {
                     res_data.status_code = 404;
-                    res_data.payload = {'Error': `The path '${trimmed_path}' is not available.`};
+                    res_data.payload = {'Error': `The path '${trimmed_pathname}' is not available.`};
                 }
         }
 
@@ -85,7 +86,7 @@ server.on('request', (req, res) =>
         });
         res.end(payload_string);
 
-        debuglog(`${req.method} /${trimmed_path} ${res_data.status_code}`);
+        debuglog(`${req.method} /${trimmed_pathname} ${res_data.status_code}`);
     });
 });
 

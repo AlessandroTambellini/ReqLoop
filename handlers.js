@@ -99,7 +99,7 @@ async function assets(req_data, res_data) {
         return;
     }
 
-    const asset_name = req_data.trimmed_path.replace('assets/', '').trim();
+    const asset_name = req_data.trimmed_pathname.replace('assets/', '').trim();
     if (asset_name.length > 0) {
         const extension_idx = asset_name.lastIndexOf('.');
         if (extension_idx === -1 || extension_idx === 0 || extension_idx === asset_name.length-1) {
