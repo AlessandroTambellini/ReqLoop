@@ -34,8 +34,10 @@ async function store_checks_in_memory() {
             }
         }
         console.log('Checks have been loaded in memory.');
+        return true;
     } catch (error) {
         console.error(error.message);
+        return false;
     }
 }
 

@@ -1,12 +1,17 @@
 const { store_checks_in_memory, setup_data_dir } = require("./data");
-const { start_server } = require("./server");
+const { start_server, kill_server } = require("./server");
 const { start_background_workers } = require("./workers");
 
 async function init_app() {
     start_server();
-    // TODO kill the server if unable to set up the data directory and store the checks in memory
-    await setup_data_dir();
-    await store_checks_in_memory();
+    if (!await setup_data_dir()) {
+        kill_server();
+        return;
+    }
+    if (!await store_checks_in_memory()) {
+        kill_server();
+        return;
+    }
     await start_background_workers();
 }
 

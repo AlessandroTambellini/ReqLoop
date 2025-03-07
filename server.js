@@ -106,8 +106,16 @@ server.on('error', (e) => {
     }
 });
 
+server.on('close', () => {
+    console.log('Server has been closed.');
+});
+
 function start_server() {
     server.listen(PORT);
 }
 
-module.exports = { start_server };
+function kill_server() {
+    server.close();
+}
+
+module.exports = { start_server, kill_server };
