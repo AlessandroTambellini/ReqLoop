@@ -21,6 +21,7 @@ server.on('request', (req, res) =>
     So, storing the strings in an array to then concatenate them toghether instead of directly reassigning the variable to a new string,
     does not seem at all an optimization given that for the data I expect to be sent,
     the buffer will never be splitted in more packets of data. */
+    // Is it because I'm in localhost and the data is simply at my disposal?
     let decoded_buffer = '';
 
     req.on('data', (buffer) => {

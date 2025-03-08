@@ -13,10 +13,21 @@ function perform_check(check_id, check_obj)
     };
     
     let payload_str = null;
-    if (check_obj.method === 'POST' || check_obj.method === 'PUT') {
-        payload_str = JSON.stringify(check_obj.payload);
+
+    /* By following the RESTful convention,
+    sending a payload with GET and DELETE shouldn't be needed.
+    However, I don't see why I should stop the user from doing so.
+    Therefore, I don't check what the method is before sending the request:
+    if a payload is present, I send it. */
+    // if (check_obj.method === 'POST' || check_obj.method === 'PUT') {
+    if (check_obj.payload) {
+        if (typeof check_obj.payload !== 'string') {
+            payload_str = JSON.stringify(check_obj.payload);
+        } else {
+            payload_str = check_obj.payload;
+        }
         options.headers = {
-            'Content-Type': 'application/json',
+            'Content-Type': typeof check_obj.payload === 'object' ? 'application/json' : 'text/plain',
             'Content-Length': Buffer.byteLength(payload_str)
         };
     }
@@ -26,17 +37,17 @@ function perform_check(check_id, check_obj)
     check_obj.req_time = Date.now();
 
     /* To update the check I listen just for the 'response' and 'error' events but,
-    they are mutually exclusive. If you fires, the other will not.
+    they are mutually exclusive. If one fires, the other will not.
     So, the variable res_obj_sent is useless. */
 
     req.on('response', async (res) => 
     {    
         debuglog(`response: ${check_id} (${check_obj.url})`);
-        check_obj.res_status_code = res.statusCode;
+        
+        check_obj.status_code = res.statusCode;
         check_obj.res_time = Date.now();
-        if (options.method === 'POST') {
-            // console.log(res.statusMessage);
-        }
+        check_obj.err_code = null;
+
         res.setEncoding('utf8');
         let chunks = [];
         res.on('data', (chunk) => {
@@ -44,17 +55,14 @@ function perform_check(check_id, check_obj)
         });
 
         res.on('end', () => {
-            if (options.method === 'POST') {
-                // console.log(chunks.join(''));
-            }
             update_check(check_id, check_obj);
         });
     });
 
     req.on('error', (err) => 
     {
-        console.error('error: ' + err);
-        check_obj.res_err_code = err.code;
+        console.error(err.message);
+        check_obj.err_code = err.code;
         update_check(check_id, check_obj);
     });
 
@@ -62,7 +70,7 @@ function perform_check(check_id, check_obj)
         // console.log('The connection for ' + check_obj.url + ' has been closed.');
     });
 
-    if (check_obj.method === 'POST' || check_obj.method === 'PUT') {
+    if (check_obj.payload) {
         req.write(payload_str);
     }
     req.end();
