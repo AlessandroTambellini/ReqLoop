@@ -197,6 +197,12 @@ function is_a_valid_check(check_JSON, res_data) {
         res_data.payload = { 'Error': `The specified method '${method}' is not allowed.` };
     }
 
+    if (method === 'POST' || method === 'PUT') {
+        if (!check_obj.hasOwnProperty('payload')) {
+            res_data.payload = { 'Error': `The method '${method}' requires a payload.` };
+        }
+    }
+
     if (res_data.payload.Error) {
         res_data.status_code = 400;
         return false;
