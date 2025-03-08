@@ -1,0 +1,38 @@
+<main id="dashboard">
+    <table>
+        <thead>
+            <tr>
+                <th>url</th>
+                <th>method</th>
+                <th>status-code</th>
+                <th>delta-time</th>
+                <th>err-code</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+        </tbody>
+    </table>
+
+    <button>
+        <a href="check/create">create check</a>
+    </button>
+    <button id="edit-check-btn" disabled>
+        <!-- The link is automatically inserted by the script. -->
+        <a href="#">edit check</a>
+    </button>
+    <button id="delete-check-btn" disabled>delete check</button>
+
+    <p id="server-feedback"></p>
+
+</main>
+
+<template id="check-row">
+    <tr>
+        <td class="url"></td>
+        <td class="method"></td>
+        <td class="status-code"></td>
+        <td class="delta-time"></td>
+        <td class="err-code"></td>
+    </tr>
+</template>

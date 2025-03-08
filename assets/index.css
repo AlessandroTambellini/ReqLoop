@@ -1,3 +1,23 @@
+body {
+    /* background-color: rgb(26, 28, 32);
+    color: rgb(236, 239, 242); */
+}
+
+button {
+    /* color: inherit; */
+    cursor: pointer;
+}
+
+input {
+    /* background-color: inherit; */
+}
+
 table {
     text-align: left;
+    border-spacing: 0;
+}
+
+tbody tr:hover {
+    background-color: rgb(62, 62, 62);
+    cursor: pointer;
 }

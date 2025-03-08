@@ -1,0 +1,40 @@
+<main id="check-edit">
+    <form action="api/check" method="PUT">
+        <label for="id">id</label>
+        <input type="text" id="id" name="id" value="" disabled>
+    
+        <label for="url">url</label>
+        <input id="url" type="text" name="url">
+    
+        <fieldset>
+            <legend>method</legend>
+            <label for="GET">GET</label>
+            <input type="radio" name="method" value="GET" id="GET" checked>
+            <label for="POST">POST</label>
+            <input type="radio" name="method" value="POST" id="POST">
+            <label for="PUT">PUT</label>
+            <input type="radio" name="method" value="PUT" id="PUT">
+            <label for="DELETE">DELETE</label>
+            <input type="radio" name="method" value="DELETE" id="DELETE">
+        </fieldset>
+
+        <label for="payload">Allowed formats: <strong>text/plain</strong> and <strong>JSON</strong></label>
+        <textarea name="payload" id="payload"
+            placeholder=
+'sopra la panca la capra canta
+
+OR
+
+{
+    "url": "https://nodejs.org/api/http.html#httprequesturl-options-callback",
+    "method": "get"
+}'
+        ></textarea>
+    
+        <button type="submit">edit check</button>
+    </form>
+
+    <p id="server-feedback"></p>
+
+</main>
+
