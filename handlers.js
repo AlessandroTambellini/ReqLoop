@@ -1,7 +1,7 @@
 const { readFile } = require('node:fs/promises');
 const { resolve } = require('node:path');
 const dns = require('node:dns');
-const { add_new_check, update_check, delete_check, get_all_checks } = require('./data');
+const { add_new_check, update_check, delete_check, get_copy_of_checks_map } = require('./data');
 const util = require('node:util');
 const debuglog = util.debuglog('handlers');
 
@@ -144,7 +144,7 @@ function retrieve_all_checks(method, res_data) {
         return;
     }
 
-    let checks_map = get_all_checks();
+    let checks_map = get_copy_of_checks_map();
     let checks_obj = Object.fromEntries(checks_map);
     res_data.status_code = 200;
     res_data.payload = checks_obj;
@@ -197,11 +197,13 @@ function is_a_valid_check(check_JSON, res_data) {
         res_data.payload = { 'Error': `The specified method '${method}' is not allowed.` };
     }
 
-    if (method === 'POST' || method === 'PUT') {
-        if (!check_obj.hasOwnProperty('payload')) {
-            res_data.payload = { 'Error': `The method '${method}' requires a payload.` };
-        }
-    }
+    /* Again, like explained in workers.js,
+    How am I to stop the user from making POST requests without a payload? */
+    // if (method === 'POST' || method === 'PUT') {
+    //     if (!check_obj.hasOwnProperty('payload')) {
+    //         res_data.payload = { 'Error': `The method '${method}' requires a payload.` };
+    //     }
+    // }
 
     if (res_data.payload.Error) {
         res_data.status_code = 400;
@@ -226,10 +228,10 @@ function handle_check_POST(req_data, res_data)
     if (is_a_valid_check(req_data.payload, res_data)) 
     {
         // Create the id of the check
-        const ID_SIZE = 20;
-        const id_chars = new Array(ID_SIZE);
+        const id_chars = new Array(20);
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        for (let i = 0; i < ID_SIZE; i++) {
+        id_chars[0] = 'a'; // in HTML an id starting with a number is not valid
+        for (let i = 1; i < 20; i++) {
             id_chars[i] = chars.charAt(Math.floor(Math.random() * chars.length));
         }
     
@@ -263,7 +265,7 @@ function handle_check_PUT(req_data, res_data) {
                 res_data.payload = { 'Error': res.Error };
             } else {
                 res_data.status_code = 200;
-                res_data.payload = { 'Success': 'Check successfully updated.' };
+                res_data.payload = { 'Success': `Check with id '${check_id}' successfully updated.` };
             }
         }
     } else {
@@ -281,7 +283,7 @@ function handle_check_DELETE(req_data, res_data) {
             res_data.payload = { 'Error': res.Error };
         } else {
             res_data.status_code = 200;
-            res_data.payload = { 'Success': 'Check successfully deleted.' };
+            res_data.payload = { 'Success': `Check with id '${check_id}' successfully deleted.` };
         }
     } else {
         res_data.status_code = 400;
