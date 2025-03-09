@@ -36,8 +36,13 @@ function perform_check(check_id, check_obj)
     const req = module_to_use.request(url_obj, options);
     check_obj.req_time = Date.now();
 
+    let f_res_catched = false;
+
     req.on('response', async (res) => 
     {    
+        if (f_res_catched) return;
+        f_res_catched = true;
+
         debuglog(`response: ${check_id} (${check_obj.url})`);
         
         check_obj.status_code = res.statusCode;
@@ -54,9 +59,19 @@ function perform_check(check_id, check_obj)
             update_check(check_id, check_obj);
         });
     });
+
+    req.on('timeout', () => {
+        if (f_res_catched) return;
+        f_res_catched = true;
+        check_obj.res_time = Date.now();
+        check_obj.err_code = 'ETIMEDOUT';
+        update_check(check_id, check_obj);
+    });
     
     req.on('error', (err) => 
     {
+        if (f_res_catched) return;
+        f_res_catched = true;
         console.error(err.message);
         check_obj.res_time = Date.now();
         check_obj.err_code = err.code;
