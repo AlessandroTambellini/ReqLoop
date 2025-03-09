@@ -62,105 +62,127 @@ function client_request(headers = {}, path, method, search_params = {}, payload 
     });
 }
 
-async function load_dashboard_data() 
-{
-    let { status_code, payload } = await client_request(undefined, 'api/check/all', 'GET', undefined, undefined);
-
-    // Populate the dashboard table
-    const tbody = document.querySelector("tbody");
-    const template = document.querySelector("#check-row");
-    
-    for (let [check_id, check_obj] of Object.entries(payload)) {
-        let clone = template.content.cloneNode(true);            
-        let tr = clone.querySelector('tr');
-        tr.id = check_id;
-        let req_time = 0;
-        let res_time = 0;
-        for (let [key, value] of Object.entries(check_obj)) {
-            if (key ==='url') {
-                tr.querySelector('.url').textContent = value;
-            } else if (key === 'method') {
-                tr.querySelector('.method').textContent = value;
-            } else if (key === 'status_code') {
-                tr.querySelector('.status-code').textContent = value;
-            } else if (key === 'err_code' && check_obj.err_code) {
-                tr.querySelector('.err-code').textContent = value;
-            } else if (key === 'req_time') {
-                req_time = value;
-            } else if (key === 'res_time') {
-                res_time = value;
-            }
-        }
-        tr.querySelector('.delta-time').textContent = res_time - req_time;
-        tbody.appendChild(clone);
-    }
-}
-
-async function update_dashboard_data() 
-{
-    let { status_code, payload } = await client_request(undefined, 'api/check/all', 'GET', undefined, undefined);
-
-    for (let [check_id, check_obj] of Object.entries(payload)) {
-        const check_row = document.querySelector('#' + check_id);
-        let req_time = 0;
-        let res_time = 0;
-        for (let [key, value] of Object.entries(check_obj)) {
-            if (key === 'status_code') {
-                check_row.querySelector('.status-code').textContent = value;
-            } else if (key === 'err_code' && check_obj.err_code) {
-                check_row.querySelector('.err-code').textContent = value;
-            } else if (key === 'req_time') {
-                req_time = value;
-            } else if (key === 'res_time') {
-                res_time = value;
-            }
-        }
-        check_row.querySelector('.delta-time').textContent = res_time - req_time;
-    }
-}
-
-async function router() {
+(function router() {
     let page = document.querySelector('main').id;
-    if (page === 'dashboard') 
-    {
-        dashboard();
+    switch (page) {
+        case 'dashboard':
+            dashboard();
+            break;
+        case 'create-check':
+            create_check();
+            break;
+        case 'check-edit':
+            edit_check();
+            break;
     }
-    else if (page === 'create-check') {
-        create_check();
-    }
-    else if (page === 'check-edit') {
-        edit_check();
-    }
-}
+})();
 
 async function dashboard() 
 {
-    await load_dashboard_data();
-
-    const edit_check_btn = document.querySelector('#edit-check-btn');
-    const delete_check_btn = document.querySelector('#delete-check-btn');
+    const tbody = document.querySelector("tbody");
+    const tr_template = document.querySelector("#check-row");
     const server_feedback = document.querySelector('#server-feedback');
 
-    let selected_row_id = null;
-    document.querySelectorAll('tbody tr').forEach(row => {
-        row.addEventListener('click', e => {
-            selected_row_id = row.id;
-            edit_check_btn.querySelector('a').href = 'check/edit?id=' + selected_row_id;
+    const edit_check_btn = document.querySelector('#edit-check-btn');
+    const edit_check_btn_link = edit_check_btn.querySelector('a');
+    const delete_check_btn = document.querySelector('#delete-check-btn');
+
+    await load_dashboard_data(tbody, tr_template, server_feedback);
+
+    const add_listener_to_check = (check) => {
+        check.addEventListener('click', () => {
+            selected_check = check;
+            check.className = 'active';
+            edit_check_btn_link.href = 'check/edit?id=' + selected_check.id;
             edit_check_btn.disabled = false;
             delete_check_btn.disabled = false;
         });
-    });
+    };
 
-    delete_check_btn.addEventListener('click', async e => {
-        if (selected_row_id) {
-            let res = await client_request(undefined, 'api/check', 'DELETE', {'id':selected_row_id}, undefined);
-            if (res.payload) {
-                server_feedback.textContent = JSON.stringify(res.payload);
+    document.querySelectorAll('tbody tr').forEach(check => add_listener_to_check(check));
+    let selected_check = null;
+
+    delete_check_btn.addEventListener('click', async () => {
+        if (selected_check) {
+            let { status_code, payload } = await client_request(undefined, 'api/check', 'DELETE', {'id':selected_check.id}, undefined);
+            if (status_code === 200) {
+                tbody.removeChild(selected_check);
             }
+            server_feedback.textContent = JSON.stringify(payload);
+            edit_check_btn_link.href = '#';
+            edit_check_btn.disabled = true;
+            delete_check_btn.disabled = true;
         }
     });
 
-    setInterval(update_dashboard_data, 5000);
+    setInterval(() => {
+        update_dashboard_data(tbody, tr_template, server_feedback, add_listener_to_check);
+    }, 5000);
+}
+
+async function load_dashboard_data(tbody, tr_template, server_feedback) 
+{
+    let { status_code, payload } = await client_request(undefined, 'api/check/all', 'GET', undefined, undefined);
+
+    if (status_code !== 200) {
+        server_feedback.textContent = 'Something went wrong while trying to retrieve checks data.';
+        return;
+    }
+
+    for (let [check_id, check_obj] of Object.entries(payload)) {
+        let check_tr = tr_template.content.cloneNode(true).querySelector('tr');
+        check_tr.id = check_id;
+        let req_time = res_time = 0;
+        for (let [key, value] of Object.entries(check_obj)) {
+            if (key === 'req_time') {
+                req_time = value;
+            } else if (key === 'res_time') {
+                res_time = value;
+            } else if (key !== 'payload') {
+                check_tr.querySelector(`.${key}`).textContent = value;
+            }
+        }
+        check_tr.querySelector('.delta_time').textContent = res_time - req_time;
+        tbody.appendChild(check_tr);
+    }
+}
+
+async function update_dashboard_data(tbody, tr_template, server_feedback, add_listener_to_check) 
+{
+    let { status_code, payload } = await client_request(undefined, 'api/check/all', 'GET', undefined, undefined);
+
+    if (status_code !== 200) {
+        server_feedback.textContent = 'Something went wrong while trying to retrieve checkss data.';
+        return;
+    }
+    
+    for (let [check_id, check_obj] of Object.entries(payload)) {
+        let check_tr = document.querySelector('#' + check_id);
+        let new_check = false;
+        if (!check_tr) {
+            // It means is a newly created check
+            new_check = true;
+            check_tr = tr_template.content.cloneNode(true).querySelector('tr');
+            check_tr.id = check_id;
+            add_listener_to_check(check_tr);
+            tbody.appendChild(check_tr);
+        }
+        let req_time = res_time = 0;
+        for (let [key, value] of Object.entries(check_obj)) {
+            if (new_check && key ==='url') {
+                check_tr.querySelector('.url').textContent = value;
+            } else if (new_check && key === 'method') {
+                check_tr.querySelector('.method').textContent = value;
+            } else if (key === 'req_time') {
+                req_time = value;
+            } else if (key === 'res_time') {
+                res_time = value;
+            } else if (key !== 'payload') {
+                check_tr.querySelector(`.${key}`).textContent = value;
+            }
+        }
+        check_tr.querySelector('.delta_time').textContent = res_time - req_time;
+    }
 }
 
 /*
@@ -168,34 +190,39 @@ NOTE: given that client and server run on the same machine,
 I do not need client-side validation for a fast feedback.
 Therefore, I accept any kind of input and the server is gonna tell me if it's wrong.
 */
-function create_check() {
+function create_check() 
+{
     const submit_btn = document.querySelector('button[type=submit]');
     const url = document.querySelector('#url');
     const textarea = document.querySelector('textarea');
     const server_feedback = document.querySelector('#server-feedback');
+
     submit_btn.addEventListener('click', async e => {
         e.preventDefault();
-        let payload = {
+        let req_obj = {
             'url': url.value,
             'method': document.querySelector('input[name="method"]:checked')?.value
         };
         if (textarea.value) {
-            payload.payload = textarea.value;
+            req_obj.payload = textarea.value;
             try {
-                payload.payload = JSON.parse(payload.payload);
+                req_obj.payload = JSON.parse(req_obj.payload);
             } catch (error) {
                 // If it's not valid JSON, I assume is text/plain
             }
         }       
-        let res = await client_request(undefined, 'api/check', 'POST', undefined, payload);
+        let { status_code, payload } = await client_request(undefined, 'api/check', 'POST', undefined, req_obj);
 
-        if (res.payload) {
-            server_feedback.textContent = JSON.stringify(res.payload);
+        if (status_code === 200) {
+            server_feedback.className = 'success-msg';
+        } else {
+            server_feedback.className = 'error-msg';
         }
+        server_feedback.textContent = JSON.stringify(payload);
     });
 }
 
-function edit_check() 
+async function edit_check() 
 {
     const submit_btn = document.querySelector('button[type=submit]');
     const id = document.querySelector('#id');
@@ -203,30 +230,53 @@ function edit_check()
     const textarea = document.querySelector('textarea');
     const server_feedback = document.querySelector('#server-feedback');
    
-    const urlParams = new URLSearchParams(window.location.search);
-    id.value = urlParams.get('id');
+    id.value = new URLSearchParams(window.location.search).get('id');
+    // Fill with the check data
+    let { status_code, payload } = await client_request(undefined, 'api/check', 'GET', {id:id.value}, undefined);
+    if (status_code !== 200) {
+        server_feedback.className = 'error-msg';
+        server_feedback.textContent = payload;
+        return; // At this point, there is no point in allowing the user to modify a check if it is not possible to retrieve it
+    }
+
+    url.value = payload.url;
+    document.querySelectorAll('input[name="method"]').forEach(method => {
+        if (method.value === payload.method) {
+            method.checked = true;
+        }
+    });
+    if (payload.payload) {
+        console.log(payload.payload)
+        if (typeof payload.payload === 'object') {
+            textarea.value = JSON.stringify(payload.payload);
+        } else {
+            textarea.value = payload.payload;
+        }
+    }
 
     submit_btn.addEventListener('click', async e => {
         e.preventDefault();
-        let payload = {
+        let req_obj = {
             'url': url.value,
             'method': document.querySelector('input[name="method"]:checked')?.value
         };
         if (textarea.value) {
-            payload.payload = textarea.value;
+            req_obj.payload = textarea.value;
             try {
-                payload.payload = JSON.parse(payload.payload);
+                req_obj.payload = JSON.parse(req_obj.payload);
             } catch (error) {
                 // If it's not valid JSON, I assume is text/plain
             }
         }   
-        let res = await client_request(undefined, 'api/check', 'PUT', {'id':id.value}, payload);
-        if (res.payload) {
-            server_feedback.textContent = JSON.stringify(res.payload);
+        let { status_code, payload } = await client_request(undefined, 'api/check', 'PUT', {'id':id.value}, req_obj);
+        if (status_code === 200) {
+            server_feedback.className = 'success-msg';
+        } else {
+            server_feedback.className = 'error-msg';
         }
+        server_feedback.textContent = JSON.stringify(payload);
     });
 }
 
-router();
 
 

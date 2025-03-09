@@ -55,6 +55,10 @@ function get_copy_of_checks_map() {
     return new Map(checks_map);
 }
 
+function get_check_by_id(check_id) {
+    return Object.assign({}, checks_map.get(check_id)); // return a copy
+}
+
 function add_new_check(check_id, check_obj) {
     if (checks_map.size < MAX_NUMBER_OF_CHECKS) {
         /* Given that in practice it never happens,
@@ -97,4 +101,5 @@ module.exports = {
     update_check, 
     delete_check,
     setup_data_dir,
+    get_check_by_id
 };

@@ -17,7 +17,22 @@ table {
     border-spacing: 0;
 }
 
-tbody tr:hover {
-    background-color: rgb(62, 62, 62);
+tbody tr {
     cursor: pointer;
+}
+
+.active {
+    background-color: rgb(62, 62, 62);
+}
+
+tbody tr:hover, tbody tr:active {
+    background-color: rgb(62, 62, 62);
+}
+
+.error-msg {
+    color: rgb(154, 15, 15);
+}
+
+.success-msg {
+    color: green;
 }

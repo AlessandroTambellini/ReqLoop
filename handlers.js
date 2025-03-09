@@ -1,7 +1,7 @@
 const { readFile } = require('node:fs/promises');
 const { resolve } = require('node:path');
 const dns = require('node:dns');
-const { add_new_check, update_check, delete_check, get_copy_of_checks_map } = require('./data');
+const { add_new_check, update_check, delete_check, get_copy_of_checks_map, get_check_by_id } = require('./data');
 const util = require('node:util');
 const debuglog = util.debuglog('handlers');
 
@@ -215,11 +215,13 @@ function is_a_valid_check(check_JSON, res_data) {
 
 function handle_check_GET(req_data, res_data) {
     const check_id = req_data.search_params.get('id');
-    if (check_id && check_id.length === 20) {
-        
+    let check_obj = get_check_by_id(check_id);
+    if (check_obj) {
+        res_data.status_code = 200;
+        res_data.payload = check_obj;
     } else {
-        res_data.status_code = 400;
-        res_data.payload = { 'Bad Request': `The id '${check_id}' is invalid.`  };
+        res_data.status_code = 404;
+        res_data.payload = { 'Error': `The id ${check_id} is invalid.`  };
     }
 }
 
@@ -245,7 +247,7 @@ function handle_check_POST(req_data, res_data)
             res_data.payload = { 'Error': res.Error };
         } else {
             res_data.status_code = 200;
-            res_data.payload = { 'Success': 'Check successfully added.', 'id': check_id };
+            res_data.payload = { 'Success': 'Check successfully added. Check id: ' + check_id };
         }
     }
 }
@@ -270,7 +272,7 @@ function handle_check_PUT(req_data, res_data) {
         }
     } else {
         res_data.status_code = 400;
-        res_data.payload = { 'Bad Request': `The id '${check_id}' is invalid.`  };
+        res_data.payload = { 'Error': `The id '${check_id}' is invalid.`  };
     }
 }
 
@@ -287,7 +289,7 @@ function handle_check_DELETE(req_data, res_data) {
         }
     } else {
         res_data.status_code = 400;
-        res_data.payload = { 'Bad Request': `The id '${check_id}' is invalid.`  };
+        res_data.payload = { 'Error': `The id '${check_id}' is invalid.`  };
     }
 }
 
