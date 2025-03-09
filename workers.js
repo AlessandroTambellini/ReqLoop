@@ -36,10 +36,6 @@ function perform_check(check_id, check_obj)
     const req = module_to_use.request(url_obj, options);
     check_obj.req_time = Date.now();
 
-    /* To update the check I listen just for the 'response' and 'error' events but,
-    they are mutually exclusive. If one fires, the other will not.
-    So, the variable res_obj_sent is useless. */
-
     req.on('response', async (res) => 
     {    
         debuglog(`response: ${check_id} (${check_obj.url})`);
@@ -47,21 +43,22 @@ function perform_check(check_id, check_obj)
         check_obj.status_code = res.statusCode;
         check_obj.res_time = Date.now();
         check_obj.err_code = null;
-
+        
         res.setEncoding('utf8');
         let chunks = [];
         res.on('data', (chunk) => {
             chunks.push(chunk);
         });
-
+        
         res.on('end', () => {
             update_check(check_id, check_obj);
         });
     });
-
+    
     req.on('error', (err) => 
     {
         console.error(err.message);
+        check_obj.res_time = Date.now();
         check_obj.err_code = err.code;
         update_check(check_id, check_obj);
     });
