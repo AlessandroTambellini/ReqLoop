@@ -1,6 +1,6 @@
 const http = require('node:http');
 const { StringDecoder } = require('node:string_decoder');
-const { dashboard, handle_check, assets, check_create, check_edit, retrieve_all_checks } = require('./handlers');
+const { not_found_page, dashboard, handle_check, assets, check_create, check_edit, retrieve_all_checks } = require('./handlers');
 const util = require('node:util');
 const debuglog = util.debuglog('server');
 const decoder = new StringDecoder('utf8');
@@ -73,8 +73,13 @@ server.on('request', (req, res) =>
                 if (trimmed_pathname.includes('assets/')) {
                     await assets(req_data, res_data);
                 } else {
-                    res_data.status_code = 404;
-                    res_data.payload = {'Error': `The path '${trimmed_pathname}' is not available.`};
+                    res_data.status_code = 404;                    
+                    if (req.headers['user-agent'].startsWith('Mozilla')) {
+                        res_data.payload = not_found_page();
+                        res_data.content_type = 'text/html';
+                    } else {
+                        res_data.payload = {'Error': `The path '${trimmed_pathname}' is not available.`};
+                    }
                 }
         }
 

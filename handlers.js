@@ -1,5 +1,4 @@
 const { readFile } = require('node:fs/promises');
-const { resolve } = require('node:path');
 const dns = require('node:dns/promises');
 const { add_new_check, update_check, delete_check, get_copy_of_checks_map, get_check_by_id } = require('./data');
 const util = require('node:util');
@@ -10,46 +9,15 @@ const debuglog = util.debuglog('handlers');
  *  HTML Handlers
  */
 
-async function check_edit(method, res_data) {
-    if (method !== 'GET') {
-        res_data.status_code = 405;
-        return;
-    }
+// I use this trick because an es module cannot have top-level await.
+let _header = _footer = null;
+(async () => {
+    _header = await readFile('./templates/_header.html', { encoding: 'utf8' });
+    _footer = await readFile('./templates/_footer.html', { encoding: 'utf8' });
+})();
 
-    try {
-        let _header = await readFile('./templates/_header.html', { encoding: 'utf8' });
-        let _footer = await readFile('./templates/_footer.html', { encoding: 'utf8' });
-        let page_content = await readFile('./templates/check_edit.html', { encoding: 'utf8' });
-
-        res_data.content_type = 'text/html';
-        res_data.status_code = 200;
-        res_data.payload = _header + page_content + _footer;
-    } catch (error) {
-        res_data.status_code = 500;
-        res_data.payload = { 'Error': 'Unable to read HTML page from disk.' };
-        debuglog(error);
-    }
-}
-
-async function check_create(method, res_data) {
-    if (method !== 'GET') {
-        res_data.status_code = 405;
-        return;
-    }
-
-    try {
-        let _header = await readFile('./templates/_header.html', { encoding: 'utf8' });
-        let _footer = await readFile('./templates/_footer.html', { encoding: 'utf8' });
-        let page_content = await readFile('./templates/check_create.html', { encoding: 'utf8' });
-
-        res_data.content_type = 'text/html';
-        res_data.status_code = 200;
-        res_data.payload = _header + page_content + _footer;
-    } catch (error) {
-        res_data.status_code = 500;
-        res_data.payload = { 'Error': 'Unable to read HTML page from disk.' };
-        debuglog(error);
-    }
+function not_found_page() {
+    return _header + '<p>404, Not Found.</p>' + _footer;
 }
 
 async function dashboard(method, res_data) 
@@ -60,29 +28,7 @@ async function dashboard(method, res_data)
     }
 
     try {
-        let _header = await readFile('./templates/_header.html', { encoding: 'utf8' });
-        let _footer = await readFile('./templates/_footer.html', { encoding: 'utf8' });
         let page_content = await readFile('./templates/dashboard.html', { encoding: 'utf8' });
-
-        // const check_path = resolve('./checks.json');
-        // const checks_JSON = await readFile('./checks.json', { encoding: 'utf8' });
-        // const checks_obj = JSON.parse(checks_JSON);
-        // let checks_HTML = [];
-        // for (const [key, value] of Object.entries(checks_obj)) {
-        //     checks_HTML.push(`
-        //         <tr>
-        //             <td>${value.protocol}</td>
-        //             <td>${value.url}</td>
-        //             <td>${value.method}</td>
-        //             <td>${value.res_status_code}</td>
-        //             <td>${value.res_time}</td>
-        //             <td>${value.res_err_code}</td>
-        //         </tr>
-        //     `);
-        // }
-
-        // page_content = page_content.replace('{{ rows }}', checks_HTML.join(''));
-
         res_data.content_type = 'text/html';
         res_data.status_code = 200;
         res_data.payload = _header + page_content + _footer;
@@ -90,6 +36,42 @@ async function dashboard(method, res_data)
         res_data.status_code = 500;
         res_data.payload = { 'Error': 'Unable to read HTML page from disk.' };
         debuglog(error.message);
+    }
+}
+
+async function check_create(method, res_data) {
+    if (method !== 'GET') {
+        res_data.status_code = 405;
+        return;
+    }
+
+    try {
+        let page_content = await readFile('./templates/check_create.html', { encoding: 'utf8' });
+        res_data.content_type = 'text/html';
+        res_data.status_code = 200;
+        res_data.payload = _header + page_content + _footer;
+    } catch (error) {
+        res_data.status_code = 500;
+        res_data.payload = { 'Error': 'Unable to read HTML page from disk.' };
+        debuglog(error);
+    }
+}
+
+async function check_edit(method, res_data) {
+    if (method !== 'GET') {
+        res_data.status_code = 405;
+        return;
+    }
+
+    try {
+        let page_content = await readFile('./templates/check_edit.html', { encoding: 'utf8' });
+        res_data.content_type = 'text/html';
+        res_data.status_code = 200;
+        res_data.payload = _header + page_content + _footer;
+    } catch (error) {
+        res_data.status_code = 500;
+        res_data.payload = { 'Error': 'Unable to read HTML page from disk.' };
+        debuglog(error);
     }
 }
 
@@ -101,13 +83,13 @@ async function assets(req_data, res_data) {
 
     const asset_name = req_data.trimmed_pathname.replace('assets/', '').trim();
     if (asset_name.length > 0) {
-        const extension_idx = asset_name.lastIndexOf('.');
+        let extension_idx = asset_name.lastIndexOf('.');
         if (extension_idx === -1 || extension_idx === 0 || extension_idx === asset_name.length-1) {
             res_data.status_code = 404;
             res_data.payload = { 'Error': 'Invalid asset name.' };
         }
 
-        const extension = asset_name.substring(extension_idx + 1);
+        let extension = asset_name.substring(extension_idx + 1);
         if (extension === 'css') res_data.content_type = 'text/css';
         else if (extension === 'svg') res_data.content_type = 'image/svg+xml';
         else if (extension === 'js') res_data.content_type = 'text/javascript';
@@ -126,7 +108,6 @@ async function assets(req_data, res_data) {
                 debuglog(error);
             }
         }
-
     } else {
         res_data.status_code = 404;
         res_data.payload = { 'Error': 'Invalid asset name.' };
@@ -281,4 +262,4 @@ function handle_check_DELETE(req_data, res_data) {
     }
 }
 
-module.exports = { dashboard, handle_check, assets, check_create, check_edit, retrieve_all_checks };
+module.exports = { not_found_page, dashboard, check_create, check_edit, assets, retrieve_all_checks, handle_check };
