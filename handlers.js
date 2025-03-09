@@ -1,6 +1,6 @@
 const { readFile } = require('node:fs/promises');
 const { resolve } = require('node:path');
-const dns = require('node:dns');
+const dns = require('node:dns/promises');
 const { add_new_check, update_check, delete_check, get_copy_of_checks_map, get_check_by_id } = require('./data');
 const util = require('node:util');
 const debuglog = util.debuglog('handlers');
@@ -150,13 +150,13 @@ function retrieve_all_checks(method, res_data) {
     res_data.payload = checks_obj;
 }
 
-function handle_check(req_data, res_data) {
+async function handle_check(req_data, res_data) {
     if (req_data.method === 'GET') {
         handle_check_GET(req_data, res_data);
     } else if (req_data.method === 'POST') {
-        handle_check_POST(req_data, res_data);
+        await handle_check_POST(req_data, res_data);
     } else if (req_data.method === 'PUT') {
-        handle_check_PUT(req_data, res_data);
+        await handle_check_PUT(req_data, res_data);
     } else if (req_data.method === 'DELETE') {
         handle_check_DELETE(req_data, res_data);
     } else {
@@ -164,7 +164,7 @@ function handle_check(req_data, res_data) {
     }
 }
 
-function is_a_valid_check(check_JSON, res_data) {
+async function is_a_valid_check(check_JSON, res_data) {
     let check_obj = null;
     try {
         check_obj = JSON.parse(check_JSON);
@@ -184,11 +184,7 @@ function is_a_valid_check(check_JSON, res_data) {
         if (!['http', 'https'].includes(protocol)) {
             res_data.payload = { 'Error': `The specified protocol '${protocol}' is not supported.` };
         }
-        dns.lookup(url_obj.hostname, (err) => {
-            if (err) {
-                res_data.payload = { 'Error': `Unable to lookup specified url '${url}'. Error code: ${err.code}.` };
-            }
-        });
+        await dns.lookup(url_obj.hostname);
     } catch (error) {
         res_data.payload = { 'Error': `The specified url '${url}' is not a valid url. Error code: ${error.code}.` };
     }
@@ -196,14 +192,6 @@ function is_a_valid_check(check_JSON, res_data) {
     if (!['GET', 'POST', 'PUT', 'DELETE'].includes(method)) {
         res_data.payload = { 'Error': `The specified method '${method}' is not allowed.` };
     }
-
-    /* Again, like explained in workers.js,
-    How am I to stop the user from making POST requests without a payload? */
-    // if (method === 'POST' || method === 'PUT') {
-    //     if (!check_obj.hasOwnProperty('payload')) {
-    //         res_data.payload = { 'Error': `The method '${method}' requires a payload.` };
-    //     }
-    // }
 
     if (res_data.payload.Error) {
         res_data.status_code = 400;
@@ -225,9 +213,9 @@ function handle_check_GET(req_data, res_data) {
     }
 }
 
-function handle_check_POST(req_data, res_data) 
+async function handle_check_POST(req_data, res_data) 
 {
-    if (is_a_valid_check(req_data.payload, res_data)) 
+    if (await is_a_valid_check(req_data.payload, res_data)) 
     {
         // Create the id of the check
         const id_chars = new Array(20);
@@ -252,11 +240,11 @@ function handle_check_POST(req_data, res_data)
     }
 }
 
-function handle_check_PUT(req_data, res_data) {
+async function handle_check_PUT(req_data, res_data) {
     const check_id = req_data.search_params.get('id');
     if (check_id && check_id.length === 20) 
     {
-        if (is_a_valid_check(req_data.payload, res_data)) 
+        if (await is_a_valid_check(req_data.payload, res_data)) 
         {
             const check_obj = JSON.parse(req_data.payload);
             check_obj.method = check_obj.method.toUpperCase();

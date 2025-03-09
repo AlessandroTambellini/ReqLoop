@@ -64,7 +64,7 @@ server.on('request', (req, res) =>
                 await check_edit(req_data.method, res_data);
                 break;
             case 'api/check':
-                handle_check(req_data, res_data);
+                await handle_check(req_data, res_data);
                 break;
             case 'api/check/all':
                 retrieve_all_checks(req_data.method, res_data);
