@@ -36,3 +36,8 @@ tbody tr:hover {
 .success-msg {
     color: green;
 }
+
+#create-check-btn {
+    padding: 0;
+    border-radius: 0;
+}
