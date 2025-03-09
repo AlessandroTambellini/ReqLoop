@@ -119,7 +119,6 @@ async function dashboard()
 
     delete_check_btn.addEventListener('click', async () => {
         if (selected_check) {
-            console.log(selected_check)
             let { status_code, payload } = await client_request(undefined, 'api/check', 'DELETE', {'id':selected_check.id}, undefined);
             if (status_code === 200) {
                 tbody.removeChild(selected_check);
@@ -262,7 +261,6 @@ async function edit_check()
         }
     });
     if (payload.payload) {
-        console.log(payload.payload)
         if (typeof payload.payload === 'object') {
             textarea.value = JSON.stringify(payload.payload);
         } else {

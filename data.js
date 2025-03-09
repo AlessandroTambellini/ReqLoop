@@ -94,12 +94,12 @@ function delete_check(check_id) {
 }
 
 module.exports = { 
+    setup_data_dir,
     store_checks_in_memory, 
     write_checks_to_disk, 
     get_copy_of_checks_map, 
+    get_check_by_id,
     add_new_check, 
     update_check, 
-    delete_check,
-    setup_data_dir,
-    get_check_by_id
+    delete_check
 };
