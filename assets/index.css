@@ -41,3 +41,27 @@ tbody tr:hover {
     padding: 0;
     border-radius: 0;
 }
+
+.status_code._1 {
+    color: rgb(0, 81, 255);
+}
+
+.status_code._2 {
+    color: green;
+}
+
+.status_code._3 {
+    color: orange;
+}
+
+.status_code._4 {
+    color: red;
+}
+
+.status_code._5 {
+    color: darkred;
+}
+
+.status_code {
+    font-weight: bold;
+}

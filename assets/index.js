@@ -156,6 +156,9 @@ async function load_dashboard_data(tbody, tr_template, server_feedback)
             } else if (key !== 'payload') {
                 check_tr.querySelector(`.${key}`).textContent = value;
             }
+            if (key === 'status_code') {
+                check_tr.querySelector(`.${key}`).classList.add('_' + new String(value).charAt(0));
+            }
         }
         check_tr.querySelector('.delta_time').textContent = res_time - req_time;
         tbody.appendChild(check_tr);
@@ -194,6 +197,9 @@ async function update_dashboard_data(tbody, tr_template, server_feedback, add_li
                 res_time = value;
             } else if (key !== 'payload') {
                 check_tr.querySelector(`.${key}`).textContent = value;
+            }
+            if (key === 'status_code') {
+                check_tr.querySelector(`.${key}`).classList.add('_' + new String(value).charAt(0));
             }
         }
         check_tr.querySelector('.delta_time').textContent = res_time - req_time;
