@@ -22,11 +22,11 @@ tbody tr {
 }
 
 .active {
-    background-color: rgb(62, 62, 62);
+    background-color: rgb(184, 184, 184);
 }
 
-tbody tr:hover, tbody tr:active {
-    background-color: rgb(62, 62, 62);
+tbody tr:hover {
+    background-color: rgb(215, 215, 215);
 }
 
 .error-msg {

@@ -89,21 +89,37 @@ async function dashboard()
 
     await load_dashboard_data(tbody, tr_template, server_feedback);
 
+    let selected_check = null;
     const add_listener_to_check = (check) => {
         check.addEventListener('click', () => {
+            selected_check?.classList.remove('active');
             selected_check = check;
-            check.className = 'active';
+            selected_check.classList.add('active');
             edit_check_btn_link.href = 'check/edit?id=' + selected_check.id;
-            edit_check_btn.disabled = false;
+            edit_check_btn.dDisabled = false;
             delete_check_btn.disabled = false;
         });
     };
 
+    document.addEventListener('click', e => {        
+        if (!e.target.classList.contains('data-cell') 
+            && e.target !== delete_check_btn 
+            && e.target !== edit_check_btn 
+            && e.target !== edit_check_btn_link) 
+        {
+            selected_check?.classList.remove('active');
+            selected_check = null;
+            edit_check_btn_link.href = '#';
+            edit_check_btn.disabled = true;
+            delete_check_btn.disabled = true;
+        }
+    });
+
     document.querySelectorAll('tbody tr').forEach(check => add_listener_to_check(check));
-    let selected_check = null;
 
     delete_check_btn.addEventListener('click', async () => {
         if (selected_check) {
+            console.log(selected_check)
             let { status_code, payload } = await client_request(undefined, 'api/check', 'DELETE', {'id':selected_check.id}, undefined);
             if (status_code === 200) {
                 tbody.removeChild(selected_check);
