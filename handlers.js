@@ -219,7 +219,8 @@ async function handle_check_POST(req_data, res_data)
         // Create the id of the check
         const id_chars = new Array(20);
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        id_chars[0] = 'a'; // in HTML an id starting with a number is not valid
+        // in HTML an id starting with a number is not valid
+        id_chars[0] = 'abcdefghijklmnopqrstuvwxyz'.charAt(Math.floor(Math.random() * chars.length));
         for (let i = 1; i < 20; i++) {
             id_chars[i] = chars.charAt(Math.floor(Math.random() * chars.length));
         }
