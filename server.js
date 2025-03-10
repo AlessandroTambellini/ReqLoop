@@ -1,6 +1,6 @@
 const http = require('node:http');
 const { StringDecoder } = require('node:string_decoder');
-const { not_found_page, dashboard, handle_check, assets, check_create, check_edit, retrieve_all_checks } = require('./handlers');
+const { not_found_page, dashboard, handle_check, checks_JSON, assets, check_create, check_edit, retrieve_all_checks } = require('./handlers');
 const util = require('node:util');
 const debuglog = util.debuglog('server');
 const decoder = new StringDecoder('utf8');
@@ -9,7 +9,7 @@ const PORT = 8000;
 const server = http.createServer();
 
 server.on('request', (req, res) => 
-{
+{    
     // Sanitize the url: https://datatracker.ietf.org/doc/html/rfc3986
     let url = req.url.replace(/[^a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]/g, '');
     let url_obj = new URL(url, 'http://localhost:' + PORT);
@@ -63,6 +63,9 @@ server.on('request', (req, res) =>
             case 'check/edit':
                 await check_edit(req_data.method, res_data);
                 break;
+            case 'checks-JSON':
+                await checks_JSON(req_data.method, res_data);
+                break;
             case 'api/check':
                 await handle_check(req_data, res_data);
                 break;
@@ -83,6 +86,11 @@ server.on('request', (req, res) =>
                 }
         }
 
+        if (res_data.status_code === 405) {
+            /* Given that this msg is always the same for the 405 status code,
+            I write here just once, instead of repeating it for each handler. */
+            res_data.payload = { 'Error': 'Method not allowed.' };
+        }
         const payload_string = res_data.content_type === 'application/json' ? JSON.stringify(res_data.payload) : res_data.payload;
 
         res.strictContentLength = true;

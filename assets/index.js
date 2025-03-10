@@ -74,6 +74,9 @@ function client_request(headers = {}, path, method, search_params = {}, payload 
         case 'check-edit':
             edit_check();
             break;
+        case 'checks-JSON':
+            checks_JSON();
+            break;
     }
 })();
 
@@ -298,5 +301,17 @@ async function edit_check()
     });
 }
 
+async function checks_JSON() {
+    const server_feedback = document.querySelector('#server-feedback');
+
+    let { status_code, payload } = await client_request(undefined, 'api/check/all', 'GET', undefined, undefined);
+    
+    if (status_code === 200) {
+        document.querySelector('pre').textContent = JSON.stringify(payload, undefined, 4);
+    } else {
+        server_feedback.className = 'error-msg';
+        server_feedback.textContent = JSON.stringify(payload);
+    }
+}
 
 

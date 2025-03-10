@@ -75,6 +75,24 @@ async function check_edit(method, res_data) {
     }
 }
 
+async function checks_JSON(method, res_data) {
+    if (method !== 'GET') {
+        res_data.status_code = 405;
+        return;
+    }
+
+    try {
+        let page_content = await readFile('./templates/checks_JSON.html', { encoding: 'utf8' });
+        res_data.content_type = 'text/html';
+        res_data.status_code = 200;
+        res_data.payload = _header + page_content + _footer;
+    } catch (error) {
+        res_data.status_code = 500;
+        res_data.payload = { 'Error': 'Unable to read HTML page from disk.' };
+        debuglog(error);
+    }
+}
+
 async function assets(req_data, res_data) {
     if (req_data.method !== 'GET') {
         res_data.status_code = 405;
@@ -262,4 +280,13 @@ function handle_check_DELETE(req_data, res_data) {
     }
 }
 
-module.exports = { not_found_page, dashboard, check_create, check_edit, assets, retrieve_all_checks, handle_check };
+module.exports = { 
+    not_found_page, 
+    dashboard, 
+    check_create, 
+    check_edit, 
+    checks_JSON, 
+    assets, 
+    retrieve_all_checks, 
+    handle_check 
+};
