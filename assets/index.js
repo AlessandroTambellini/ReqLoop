@@ -49,9 +49,9 @@ function client_request(headers = {}, path, method, search_params = {}, payload 
                 res_obj.payload = payload_obj;
             } catch (error) {
                 console.error('The response payload was not of type JSON or was malformed.');
-                console.log('At time:', new Date(Date.now()));
+                console.error('At time:', new Date(Date.now()));
                 console.error(error);
-                console.log('Known information:\n', 
+                console.error('Known information:\n', 
                     'RESPONSE\n',
                     'status:', xhr.status, '\n',
                     'responseText:', xhr.responseText, '\n',
@@ -239,14 +239,26 @@ function create_check()
             'url': url.value,
             'method': document.querySelector('input[name="method"]:checked')?.value
         };
-        if (textarea.value) {
-            req_obj.payload = textarea.value;
-            try {
-                req_obj.payload = JSON.parse(req_obj.payload);
-            } catch (error) {
-                // If it's not valid JSON, I assume is text/plain
+        
+        if (textarea.value) 
+        {
+            let format = document.querySelector('input[name="format"]:checked')?.value;
+            let text = textarea.value.trim();
+            if (text && format === 'json') {
+                text = textarea.value.replace(/[\s\n\r]+/g, '');
+                try {
+                    req_obj.payload = JSON.parse(text);
+                } catch (error) {
+                    server_feedback.className = 'error-msg';
+                    server_feedback.textContent = 'Invalid JSON for the payload.';
+                    return;
+                }
+            } 
+            else if (text && format === 'text/plain') {
+                req_obj.payload = text;
             }
         }       
+
         let { status_code, payload } = await client_request(undefined, 'api/check', 'POST', undefined, req_obj);
 
         if (status_code === 200) {
@@ -295,15 +307,27 @@ async function edit_check()
             'url': url.value,
             'method': document.querySelector('input[name="method"]:checked')?.value
         };
+        
         if (textarea.value) {
-            req_obj.payload = textarea.value;
-            try {
-                req_obj.payload = JSON.parse(req_obj.payload);
-            } catch (error) {
-                // If it's not valid JSON, I assume is text/plain
+            let format = document.querySelector('input[name="format"]:checked')?.value;
+            let text = textarea.value.trim();
+            if (text && format === 'json') {
+                text = textarea.value.replace(/[\s\n\r]+/g, '');
+                try {
+                    req_obj.payload = JSON.parse(text);
+                } catch (error) {
+                    server_feedback.className = 'error-msg';
+                    server_feedback.textContent = 'Invalid JSON for the payload.';
+                    return;
+                }
+            } 
+            else if (text && format === 'text/plain') {
+                req_obj.payload = text;
             }
-        }   
+        }
+
         let { status_code, payload } = await client_request(undefined, 'api/check', 'PUT', {'id':id.value}, req_obj);
+        
         if (status_code === 200) {
             server_feedback.className = 'success-msg';
         } else {
