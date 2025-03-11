@@ -1,18 +1,30 @@
-const { store_checks_in_memory, setup_data_dir } = require("./data");
-const { init_REPL_server } = require("./repl");
-const { start_server, kill_server } = require("./server");
-const { start_background_workers } = require("./workers");
+const { setup_data_dir, store_checks_in_memory } = require("./lib/data.js");
+const { init_REPL_server } = require("./lib/repl.js");
+const { start_server, close_server } = require("./lib/server.js");
+const { start_background_workers } = require("./lib/workers.js");
 
-async function init_app() {
+async function init_app() 
+{
     start_server();
-    if (!await setup_data_dir()) {
-        kill_server();
+
+    let res = await setup_data_dir();
+    if (res.Error) {
+        console.error(res.Error);
+        close_server();
         return;
+    } else {
+        console.log(res.Success);
     }
-    if (!await store_checks_in_memory()) {
-        kill_server();
-        return;
+
+    res = await store_checks_in_memory(); 
+    if (res.Error) {
+        console.error(res.Error);
+        close_server();
+        return;        
+    } else {
+        console.log(res.Success);
     }
+    
     await start_background_workers();
     init_REPL_server();
 }

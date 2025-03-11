@@ -48,7 +48,19 @@ function client_request(headers = {}, path, method, search_params = {}, payload 
                 let payload_obj = JSON.parse(xhr.responseText);
                 res_obj.payload = payload_obj;
             } catch (error) {
+                console.error('The response payload was not of type JSON or was malformed.');
+                console.log('At time:', new Date(Date.now()));
                 console.error(error);
+                console.log('Known information:\n', 
+                    'RESPONSE\n',
+                    'status:', xhr.status, '\n',
+                    'responseText:', xhr.responseText, '\n',
+                    'REQUEST\n',
+                    'headers:', headers, '\n', 
+                    'path:', path, '\n', 
+                    'method:', method, '\n', 
+                    'search_params:', search_params, '\n', 
+                    'payload:', payload);
             }
             resolve(res_obj);
         }
@@ -86,8 +98,8 @@ async function dashboard()
     const tr_template = document.querySelector("#check-row");
     const server_feedback = document.querySelector('#server-feedback');
 
-    const edit_check_btn = document.querySelector('#edit-check-btn');
-    const edit_check_btn_link = edit_check_btn.querySelector('a');
+    // const edit_check_btn = document.querySelector('#edit-check-btn');
+    const edit_check_link = document.querySelector('#edit-check-link');
     const delete_check_btn = document.querySelector('#delete-check-btn');
 
     await load_dashboard_data(tbody, tr_template, server_feedback);
@@ -98,8 +110,7 @@ async function dashboard()
             selected_check?.classList.remove('active');
             selected_check = check;
             selected_check.classList.add('active');
-            edit_check_btn_link.href = 'check/edit?id=' + selected_check.id;
-            edit_check_btn.dDisabled = false;
+            edit_check_link.href = 'check/edit?id=' + selected_check.id;
             delete_check_btn.disabled = false;
         });
     };
@@ -107,13 +118,11 @@ async function dashboard()
     document.addEventListener('click', e => {        
         if (!e.target.classList.contains('data-cell') 
             && e.target !== delete_check_btn 
-            && e.target !== edit_check_btn 
-            && e.target !== edit_check_btn_link) 
+            && e.target !== edit_check_link) 
         {
             selected_check?.classList.remove('active');
             selected_check = null;
-            edit_check_btn_link.href = '#';
-            edit_check_btn.disabled = true;
+            edit_check_link.href = '#';
             delete_check_btn.disabled = true;
         }
     });
@@ -125,10 +134,12 @@ async function dashboard()
             let { status_code, payload } = await client_request(undefined, 'api/check', 'DELETE', {'id':selected_check.id}, undefined);
             if (status_code === 200) {
                 tbody.removeChild(selected_check);
+                server_feedback.className = 'success-msg';
+            } else {
+                server_feedback.className = 'error-msg';
             }
             server_feedback.textContent = JSON.stringify(payload);
-            edit_check_btn_link.href = '#';
-            edit_check_btn.disabled = true;
+            edit_check_link.href = '#';
             delete_check_btn.disabled = true;
         }
     });
@@ -150,7 +161,8 @@ async function load_dashboard_data(tbody, tr_template, server_feedback)
     for (let [check_id, check_obj] of Object.entries(payload)) {
         let check_tr = tr_template.content.cloneNode(true).querySelector('tr');
         check_tr.id = check_id;
-        let req_time = res_time = 0;
+        let req_time = 0;
+        let res_time = 0;
         for (let [key, value] of Object.entries(check_obj)) {
             if (key === 'req_time') {
                 req_time = value;
@@ -188,7 +200,8 @@ async function update_dashboard_data(tbody, tr_template, server_feedback, add_li
             add_listener_to_check(check_tr);
             tbody.appendChild(check_tr);
         }
-        let req_time = res_time = 0;
+        let req_time = 0;
+        let res_time = 0;
         for (let [key, value] of Object.entries(check_obj)) {
             if (new_check && key ==='url') {
                 check_tr.querySelector('.url').textContent = value;
@@ -209,11 +222,6 @@ async function update_dashboard_data(tbody, tr_template, server_feedback, add_li
     }
 }
 
-/*
-NOTE: given that client and server run on the same machine,
-I do not need client-side validation for a fast feedback.
-Therefore, I accept any kind of input and the server is gonna tell me if it's wrong.
-*/
 function create_check() 
 {
     const submit_btn = document.querySelector('button[type=submit]');
@@ -223,6 +231,10 @@ function create_check()
 
     submit_btn.addEventListener('click', async e => {
         e.preventDefault();
+
+        /* NOTE: given that client and server run on the same machine,
+        I do not need client-side validation for a fast feedback.
+        Therefore, I accept any kind of input and then, the server is gonna tell me if it's wrong. */
         let req_obj = {
             'url': url.value,
             'method': document.querySelector('input[name="method"]:checked')?.value

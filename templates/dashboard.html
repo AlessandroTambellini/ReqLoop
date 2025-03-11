@@ -14,17 +14,26 @@
         </tbody>
     </table>
 
-    <button>
-        <a href="checks-JSON">view checks JSON</a>
-    </button>
-    <button id="create-check-btn">
-        <a href="check/create">create check</a>
+    <ul>
+        <li>
+            <a href="checks-JSON">view checks JSON</a>
+        </li>
+        <li>
+            <a id="create-check-link" href="check/create">create check</a>
+        </li>
+        <li>
+            <!-- The link is automatically inserted by the script. -->
+            <a id="edit-check-link" href="#">edit check</a>
+        </li>
+        <li>
+            <button id="delete-check-btn" disabled>delete check</button>
+        </li>
+    </ul>
+
+    <!-- <button id="create-check-btn">
     </button>
     <button id="edit-check-btn" disabled>
-        <!-- The link is automatically inserted by the script. -->
-        <a href="#">edit check</a>
-    </button>
-    <button id="delete-check-btn" disabled>delete check</button>
+    </button> -->
 
     <p id="server-feedback"></p>
 
