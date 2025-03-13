@@ -29,7 +29,7 @@ async function init_app()
         return;
     }
     
-    await start_background_workers();
+    start_background_workers();
     start_server();
     init_main_REPL();
 }
