@@ -116,7 +116,7 @@ tbody tr:hover {
 }
 
 #dashboard-buttons img {
-    /* width: 4rem; */
+    width: 4rem; /* initial dimension, then it is resized with resizeObserver */
 }
 
 .status_code._1 {
