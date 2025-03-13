@@ -98,7 +98,6 @@ async function dashboard()
     const tr_template = document.querySelector("#check-row");
     const feedback = document.querySelector('#feedback');
 
-    // const edit_check_btn = document.querySelector('#edit-check-btn');
     const edit_check_link = document.querySelector('#edit-check-link');
     const delete_check_btn = document.querySelector('#delete-check-btn');
 
@@ -147,6 +146,27 @@ async function dashboard()
     setInterval(() => {
         update_dashboard_data(tbody, tr_template, feedback, add_listener_to_check);
     }, 5000);
+
+    /*
+     *
+     *  UI
+     */
+
+    const main = document.querySelector('main');
+    const thead = document.querySelector('thead');
+    const nav_icons = document.querySelectorAll('#dashboard-buttons img');
+    const resize_observer = new ResizeObserver(entries => 
+    {
+        for (let entry of entries) {
+            thead.style.fontSize = `${Math.max(1, entry.contentRect.width / 1000)}rem`;
+            tbody.style.fontSize = `${Math.max(.9, entry.contentRect.width / 1050)}rem`;
+            nav_icons.forEach(icon => {
+                icon.style.width = `${Math.max(2.5, entry.contentRect.width / 400)}rem`;
+            });
+        }
+    });
+    
+    resize_observer.observe(main);
 }
 
 async function load_dashboard_data(tbody, tr_template, feedback) 
@@ -379,5 +399,3 @@ async function checks_JSON() {
         feedback.textContent = JSON.stringify(payload);
     }
 }
-
-

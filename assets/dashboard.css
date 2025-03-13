@@ -1,0 +1,148 @@
+main {
+    border-radius: 2rem;
+    border: 1px solid rgb(151, 151, 151);
+    box-shadow: 0 5px 10px -2px grey;
+    margin-top: 2.5vh;
+    background: rgb(237, 237, 237);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: column;
+    padding: min(2rem, 2vw);
+    max-height: 95vh;
+    height: fit-content;
+}
+
+table {
+    border-spacing: 0;
+    text-align: center;
+    table-layout: fixed;    
+    display: flex;
+    flex-direction: column;    
+    max-width: 1600px; 
+    /* margin-bottom: 2rem; */
+}
+
+thead, 
+tbody {
+    display: block;
+    width: 100%;
+}
+
+thead th {
+    padding-inline: min(.5em, 1vw);
+    padding-bottom: .5em;
+}
+
+tbody {
+    max-height: 75vh;
+    overflow-y: auto;
+    box-shadow: 
+        inset -5px 5px 5px 5px rgb(237, 237, 237),
+        inset -5px -2px 5px 0px rgb(158, 158, 158);
+}
+
+tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+/* The width of each field */
+th:first-child,
+td:first-child {
+    width: 55%;
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+    width: 10%;
+}
+
+th:nth-child(3),
+td:nth-child(3) {
+    width: 10%;
+}
+
+th:nth-child(4),
+td:nth-child(4) {
+    width: 10%;
+}
+
+th:last-child,
+td:last-child {
+    width: 15%;
+}
+
+.data-cell.url {
+    max-width: 80ch;
+    word-wrap: break-word;
+    text-align: left;
+    word-break: break-all;      
+}
+
+.data-cell.err_code {
+    font-weight: 700;
+}
+
+#url-th {
+    text-align: left;
+}
+
+tbody td {
+    border-bottom: 1px solid rgb(152, 152, 152);
+    padding: .5em min(.5em, 1vw);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+tbody tr {
+    cursor: pointer;
+}
+
+tbody tr:hover {
+    background-color: rgb(215, 215, 215);
+}
+
+#dashboard-buttons {
+    display: flex;
+    flex-direction: row;
+    list-style: none;
+    gap: 3rem;
+    /* margin-top: auto; */
+    padding-top: min(2rem, 2vw);
+}
+
+#dashboard-buttons img {
+    /* width: 4rem; */
+}
+
+.status_code._1 {
+    color: rgb(0, 81, 255);
+}
+
+.status_code._2 {
+    color: green;
+}
+
+.status_code._3 {
+    color: orange;
+}
+
+.status_code._4 {
+    color: red;
+}
+
+.status_code._5 {
+    color: darkred;
+}
+
+.status_code {
+    font-weight: bold;
+}
+
+.active {
+    background-color: rgb(184, 184, 184);
+}

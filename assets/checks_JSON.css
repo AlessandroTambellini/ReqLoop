@@ -1,0 +1,15 @@
+main {
+    max-width: 1600px;
+    max-height: 95vh;
+    overflow: scroll;
+    margin-block: auto;
+    background: rgb(237, 237, 237);
+    border-radius: 2rem;
+    border: 1px solid rgb(151, 151, 151);
+    box-shadow: 0 5px 10px -2px grey;
+    padding: 2rem;
+}
+
+img {
+    width: 2rem;
+}

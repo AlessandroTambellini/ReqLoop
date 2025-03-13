@@ -2,7 +2,7 @@
     <table>
         <thead>
             <tr>
-                <th>url</th>
+                <th id="url-th">url</th>
                 <th>method</th>
                 <th>status-code</th>
                 <th>delta-time</th>
@@ -14,19 +14,27 @@
         </tbody>
     </table>
 
-    <ul>
+    <ul id="dashboard-buttons">
         <li>
-            <a href="checks-JSON">view checks JSON</a>
+            <a href="checks-JSON">
+                <img src="../assets/icons/json.svg" alt="View checks JSON">
+            </a>
         </li>
         <li>
-            <a id="create-check-link" href="check/create">create check</a>
+            <a id="create-check-link" href="check/create">
+                <img src="../assets/icons/add-row.svg" alt="Create check">
+            </a>
         </li>
         <li>
             <!-- The link is automatically inserted by the script. -->
-            <a id="edit-check-link" href="#">edit check</a>
+            <a id="edit-check-link" href="#">
+                <img src="../assets/icons/edit.svg" alt="Edit check">
+            </a>
         </li>
         <li>
-            <button id="delete-check-btn" disabled>delete check</button>
+            <button id="delete-check-btn" disabled>
+                <img src="../assets/icons/delete.svg" alt="Delete check">
+            </button>
         </li>
     </ul>
 

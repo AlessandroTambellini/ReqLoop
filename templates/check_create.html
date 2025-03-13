@@ -1,6 +1,6 @@
 <main id="create-check">
-    <a href="/">&#10550;</a>
-    <form action="/api/check" method="POST">
+    <a href="/">&#10550; back</a>
+    <form id="create-check-form" action="/api/check" method="POST">
         
         <label for="url">url</label>
         <input id="url" type="text" name="url" placeholder="https://nodejs.org/api/url.html">
@@ -26,7 +26,7 @@
             <input type="radio" name="format" value="text/plain" id="text-plain">
             <label for="text-plain">text/plain</label>
             <br>
-            <input type="radio" name="format" value="json" id="json" checked>
+            <input type="radio" name="format" value="json" id="json">
             <label for="json">JSON</label>
         </fieldset>
         <textarea name="payload" id="payload"></textarea>

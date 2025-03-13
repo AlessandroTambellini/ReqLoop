@@ -1,0 +1,49 @@
+
+label, legend {
+    font-size: 1rem;
+}
+
+form input, fieldset label, textarea, button {
+    font-size: 1.2rem;
+}
+
+label {
+    margin-top: 1em;
+    margin-bottom: .25em;
+} 
+
+label[for=payload] {
+    margin-bottom: 0;
+}
+
+#url {
+    padding: .25em;
+}
+
+fieldset {
+    margin-top: .5em;
+    margin-bottom: .25em;
+    padding: .25em;
+}
+
+form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 1em;
+    border: 1px solid red;
+}
+
+form > * {
+    width: 100%;
+}
+
+form button[type=submit] {
+    margin-top: .5em;
+    padding: .25em;
+    border-radius: .5em;
+    border: none;
+    border: 1px solid rgb(153, 153, 153);
+    border-radius: 2rem;
+}

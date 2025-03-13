@@ -1,32 +1,26 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
 body {
-    /* background-color: rgb(26, 28, 32);
-    color: rgb(236, 239, 242); */
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: rgb(227, 227, 227);
+    background-image: url(./icons/sphere-grid.svg);
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+p, a, pre {
+    font-size: 1.2rem;
 }
 
 button {
-    /* color: inherit; */
     cursor: pointer;
-}
-
-input {
-    /* background-color: inherit; */
-}
-
-table {
-    text-align: left;
-    border-spacing: 0;
-}
-
-tbody tr {
-    cursor: pointer;
-}
-
-.active {
-    background-color: rgb(184, 184, 184);
-}
-
-tbody tr:hover {
-    background-color: rgb(215, 215, 215);
+    border: none;
 }
 
 .error-msg {
@@ -37,31 +31,3 @@ tbody tr:hover {
     color: green;
 }
 
-#create-check-btn {
-    padding: 0;
-    border-radius: 0;
-}
-
-.status_code._1 {
-    color: rgb(0, 81, 255);
-}
-
-.status_code._2 {
-    color: green;
-}
-
-.status_code._3 {
-    color: orange;
-}
-
-.status_code._4 {
-    color: red;
-}
-
-.status_code._5 {
-    color: darkred;
-}
-
-.status_code {
-    font-weight: bold;
-}
