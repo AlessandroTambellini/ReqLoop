@@ -38,8 +38,8 @@ tbody {
     max-height: 75vh;
     overflow-y: auto;
     box-shadow: 
-        inset -5px 5px 5px 5px rgb(237, 237, 237),
-        inset -5px -2px 5px 0px rgb(158, 158, 158);
+        inset 0 5px 5px -5px rgba(158, 158, 158, 0.8),
+        inset 0 -5px 5px -5px rgba(158, 158, 158, 0.8);
 }
 
 tr {
