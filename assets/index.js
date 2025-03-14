@@ -104,42 +104,62 @@ async function dashboard()
     await load_dashboard_data(tbody, tr_template, feedback);
 
     let selected_check = null;
-    const add_listener_to_check = (check) => {
-        check.addEventListener('click', () => {
-            selected_check?.classList.remove('active');
-            selected_check = check;
-            selected_check.classList.add('active');
+
+    const toggle_buttons = (enable) => {
+        edit_check_link.ariaDisabled = enable ? false : true;
+        delete_check_btn.ariaDisabled = enable ? false : true;
+        if (enable) {
+            edit_check_link.classList.add('enabled');
+            delete_check_btn.classList.add('enabled');
             edit_check_link.href = 'check/edit?id=' + selected_check.id;
-            delete_check_btn.disabled = false;
-        });
-    };
+        } else {
+            edit_check_link.classList.remove('enabled');
+            delete_check_btn.classList.remove('enabled');
+            edit_check_link.href = '#';
+        }
+    }
+
+    const select_check = (e) => {
+        selected_check?.classList.remove('active');
+        selected_check = e.target.parentElement; // because the click happens on a <td>
+        selected_check.classList.add('active');
+        toggle_buttons(true);
+    }
 
     document.addEventListener('click', e => {        
         if (!e.target.classList.contains('data-cell') 
-            && e.target.parentElement !== delete_check_btn /* e.target is the icon of the link */
-            && e.target.parentElement !== edit_check_link) 
+            && e.target !== delete_check_btn && e.target.parentElement !== delete_check_btn
+            && e.target !== edit_check_link && e.target.parentElement !== edit_check_link)      
         {
             selected_check?.classList.remove('active');
             selected_check = null;
-            edit_check_link.href = '#';
-            delete_check_btn.disabled = true;
+            toggle_buttons(false);
         }
     });
 
-    document.querySelectorAll('tbody tr').forEach(check => add_listener_to_check(check));
+    // table.tBodies[0].children is a HTMLCollection that does not have the .forEach() property
+    for (let i = 0; i < table.tBodies[0].children.length; i++) {
+        table.tBodies[0].children[i].addEventListener('click', select_check);
+    }
 
     delete_check_btn.addEventListener('click', async () => {
         if (selected_check) {
             let { status_code, payload } = await client_request(undefined, 'api/check', 'DELETE', {'id':selected_check.id}, undefined);
             if (status_code === 200) {
-                tbody.removeChild(selected_check);
+                table.tBodies[0].removeChild(selected_check);
+                selected_check = null;
                 feedback.className = 'success-msg';
+                feedback.textContent = payload.Success;
+                if (table.tBodies[0].children.length === 0) {
+                    no_checks_display.style.display = 'flex';
+                    table.style.display = 'none';
+                }
             } else {
                 feedback.className = 'error-msg';
+                feedback.textContent = payload.Error;
             }
-            feedback.textContent = JSON.stringify(payload);
-            edit_check_link.href = '#';
-            delete_check_btn.disabled = true;
+            feedback.style.display = 'block';
+            toggle_buttons(false);    
         }
     });
 
