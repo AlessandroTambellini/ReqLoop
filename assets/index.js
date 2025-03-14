@@ -116,8 +116,8 @@ async function dashboard()
 
     document.addEventListener('click', e => {        
         if (!e.target.classList.contains('data-cell') 
-            && e.target !== delete_check_btn 
-            && e.target !== edit_check_link) 
+            && e.target.parentElement !== delete_check_btn /* e.target is the icon of the link */
+            && e.target.parentElement !== edit_check_link) 
         {
             selected_check?.classList.remove('active');
             selected_check = null;
