@@ -272,36 +272,8 @@ function create_check()
     submit_btn.addEventListener('click', async e => {
         e.preventDefault();
 
-        let url_value = url.value.trim();
-        if (url_value.length < 1) {
-            feedback.className = 'error-msg';
-            feedback.textContent = 'Invalid url.';
-            return;
-        }
-        
-        let req_obj = {
-            'url': url_value,
-            'method': document.querySelector('input[name="method"]:checked')?.value
-        };
-        
-        if (textarea.value) 
-        {
-            let format = document.querySelector('input[name="format"]:checked')?.value;
-            let text = textarea.value.trim();
-            if (text && format === 'json') {
-                text = textarea.value.replace(/[\s\n\r]+/g, '');
-                try {
-                    req_obj.payload = JSON.parse(text);
-                } catch (error) {
-                    feedback.className = 'error-msg';
-                    feedback.textContent = 'Invalid JSON for the payload.';
-                    return;
-                }
-            } 
-            else if (text && format === 'text/plain') {
-                req_obj.payload = text;
-            }
-        }       
+        let req_obj = {};
+        fill_req_obj(req_obj, url, textarea, feedback);      
 
         let { status_code, payload } = await client_request(undefined, 'api/check', 'POST', undefined, req_obj);
 
@@ -365,6 +337,24 @@ async function edit_check()
     submit_btn.addEventListener('click', async e => {
         e.preventDefault();
 
+        let req_obj = {};
+        fill_req_obj(req_obj, url, textarea, feedback);
+
+        let { status_code, payload } = await client_request(undefined, 'api/check', 'PUT', {'id':id.value}, req_obj);
+        
+        if (status_code === 200) {
+            feedback.className = 'success-msg';
+            feedback.textContent = payload.Success;
+        } else {
+            feedback.className = 'error-msg';
+            feedback.textContent = payload.Error;
+        }
+        feedback.style.display = 'block';
+    });
+}
+
+function fill_req_obj(req_obj, url, textarea, feedback) 
+{
         let url_value = url.value.trim();
         if (url_value.length < 1) {
             feedback.className = 'error-msg';
@@ -372,10 +362,8 @@ async function edit_check()
             return;
         }
         
-        let req_obj = {
-            'url': url_value,
-            'method': document.querySelector('input[name="method"]:checked')?.value
-        };
+    req_obj.url = url_value;
+    req_obj.method = document.querySelector('input[name="method"]:checked')?.value;
         
         if (textarea.value) 
         {
@@ -395,16 +383,6 @@ async function edit_check()
                 req_obj.payload = text;
             }
         }
-
-        let { status_code, payload } = await client_request(undefined, 'api/check', 'PUT', {'id':id.value}, req_obj);
-        
-        if (status_code === 200) {
-            feedback.className = 'success-msg';
-        } else {
-            feedback.className = 'error-msg';
-        }
-        feedback.textContent = JSON.stringify(payload);
-    });
 }
 
 async function checks_JSON() {
