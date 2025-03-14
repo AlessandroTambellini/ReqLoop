@@ -1,9 +1,26 @@
+main {
+    height: fit-content;
+    width: 100%;
+    max-width: 80ch;
+}
+
+form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 1em;
+}
+
+form > * {
+    width: 100%;
+}
 
 label, legend {
     font-size: 1rem;
 }
 
-form input, fieldset label, textarea, button {
+input, fieldset label, textarea, button {
     font-size: 1.2rem;
 }
 
@@ -11,6 +28,10 @@ label {
     margin-top: 1em;
     margin-bottom: .25em;
 } 
+
+label[for=url] {
+    margin-top: 0;
+}
 
 label[for=payload] {
     margin-bottom: 0;
@@ -26,23 +47,13 @@ fieldset {
     padding: .25em;
 }
 
-form {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    padding: 1em;
-    border: 1px solid red;
+textarea {
+    height: 10lh;
 }
 
-form > * {
-    width: 100%;
-}
-
-form button[type=submit] {
+button {
     margin-top: .5em;
     padding: .25em;
-    border-radius: .5em;
     border: none;
     border: 1px solid rgb(153, 153, 153);
     border-radius: 2rem;
