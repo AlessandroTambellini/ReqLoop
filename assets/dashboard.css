@@ -10,17 +10,17 @@ main {
     flex-direction: column;
     padding: min(2rem, 2vw);
     max-height: 95vh;
-    height: fit-content;
 }
 
 table {
+    overflow: hidden;
+
     border-spacing: 0;
     text-align: center;
     table-layout: fixed;    
     display: flex;
     flex-direction: column;    
     max-width: 1600px; 
-    /* margin-bottom: 2rem; */
 }
 
 thead, 
@@ -35,7 +35,7 @@ thead th {
 }
 
 tbody {
-    max-height: 75vh;
+    max-height: 100%;
     overflow-y: auto;
     box-shadow: 
         inset 0 5px 5px -5px rgba(158, 158, 158, 0.8),
@@ -103,7 +103,26 @@ tbody tr {
 }
 
 tbody tr:hover {
-    background-color: rgb(215, 215, 215);
+    background-color: rgb(228, 228, 228);
+}
+
+#no-checks-display {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    margin-block: 2rem;
+    color: rgb(165, 165, 165);
+}
+
+#no-checks-display img {
+    width: 7rem;
+    margin-right: .25em;
+}
+
+#no-checks-display p {
+    font-size: 4rem;
+    font-weight: 600;
 }
 
 #dashboard-buttons {
@@ -111,12 +130,33 @@ tbody tr:hover {
     flex-direction: row;
     list-style: none;
     gap: 3rem;
-    /* margin-top: auto; */
+    margin-top: auto;
     padding-top: min(2rem, 2vw);
 }
 
-#dashboard-buttons img {
-    width: 4rem; /* initial dimension, then it is resized with resizeObserver */
+#dashboard-buttons li {
+    display: block;
+    background-color: rgb(216, 216, 216);
+    line-height: 0;
+    height: fit-content;
+    box-shadow: 0 4px 4px rgb(43, 43, 43);
+    padding: .7rem;
+    border-radius: 100%;
+}
+
+#dashboard-buttons li:hover {
+    background-color: rgb(228, 228, 228);
+}
+
+#dashboard-buttons li a {
+}
+
+#dashboard-buttons li img {
+    width: 3.5rem; /* initial dimension, then it is resized with resizeObserver */
+}
+
+#dashboard-buttons li:active {
+    box-shadow: 0 0px 1px rgb(43, 43, 43);
 }
 
 .status_code._1 {
