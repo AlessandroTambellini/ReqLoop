@@ -1,5 +1,7 @@
-<main id="check-edit">
-    <a href="/">back &#10550;</a>
+<main id="check-edit" class="main-container">
+    <a class="go-back-arrow" href="/">
+        <img src="../assets/icons/back.svg" alt="Go Back"> back
+    </a>
     <form action="api/check" method="PUT">
         <label for="id">id</label>
         <input type="text" id="id" name="id" value="" disabled>
@@ -33,7 +35,7 @@
         </fieldset>
         <textarea name="payload" id="payload"></textarea>
     
-        <button type="submit">edit check</button>
+        <button class="button-style enabled" type="submit">edit check</button>
     </form>
 
     <p id="feedback"></p>

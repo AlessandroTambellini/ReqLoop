@@ -1,15 +1,12 @@
 main {
-    max-width: 1600px;
+    min-width: 40ch;
+    height: fit-content;
+    max-width: 100ch;
     max-height: 95vh;
-    overflow: scroll;
-    margin-block: auto;
-    background: rgb(237, 237, 237);
-    border-radius: 2rem;
-    border: 1px solid rgb(151, 151, 151);
-    box-shadow: 0 5px 10px -2px grey;
-    padding: 2rem;
+    min-height: 10lh;
 }
 
-img {
-    width: 2rem;
+div {
+    overflow: auto;
+    max-height: calc(95vh - 8rem);
 }

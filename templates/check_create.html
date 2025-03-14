@@ -1,9 +1,11 @@
-<main id="create-check">
-    <a href="/">&#10550; back</a>
-    <form id="create-check-form" action="/api/check" method="POST">
+<main id="create-check" class="main-container">
+    <a class="go-back-arrow" href="/">
+        <img src="../assets/icons/back.svg" alt="Go Back"> back
+    </a>
+    <form action="/api/check" method="POST">
         
         <label for="url">url</label>
-        <input id="url" type="text" name="url" placeholder="https://nodejs.org/api/url.html">
+        <input id="url" type="text" name="url" placeholder="https://example.com">
         
         <fieldset>
             <legend>method</legend>
@@ -31,7 +33,7 @@
         </fieldset>
         <textarea name="payload" id="payload"></textarea>
         
-        <button type="submit">create check</button>
+        <button class="button-style enabled" type="submit">create check</button>
     </form>
     <p id="feedback"></p>
 </main>

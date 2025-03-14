@@ -94,14 +94,24 @@ function client_request(headers = {}, path, method, search_params = {}, payload 
 
 async function dashboard() 
 {
-    const tbody = document.querySelector("tbody");
+    const table = document.querySelector("table");
+    const no_checks_display = document.querySelector("#no-checks-display");
     const tr_template = document.querySelector("#check-row");
     const feedback = document.querySelector('#feedback');
-
+    
     const edit_check_link = document.querySelector('#edit-check-link');
     const delete_check_btn = document.querySelector('#delete-check-btn');
+    
+    await load_dashboard_data(table, no_checks_display, tr_template, feedback);
 
-    await load_dashboard_data(tbody, tr_template, feedback);
+    setInterval(() => {
+        update_dashboard_data(table, no_checks_display, tr_template, feedback, select_check);
+    }, 5000);
+
+    /*
+     *
+     *  UX
+     */
 
     let selected_check = null;
 
@@ -125,8 +135,8 @@ async function dashboard()
         selected_check.classList.add('active');
         toggle_buttons(true);
     }
-
-    document.addEventListener('click', e => {        
+    
+    document.addEventListener('click', e => {  
         if (!e.target.classList.contains('data-cell') 
             && e.target !== delete_check_btn && e.target.parentElement !== delete_check_btn
             && e.target !== edit_check_link && e.target.parentElement !== edit_check_link)      
@@ -163,25 +173,22 @@ async function dashboard()
         }
     });
 
-    setInterval(() => {
-        update_dashboard_data(tbody, tr_template, feedback, add_listener_to_check);
-    }, 5000);
-
     /*
      *
      *  UI
      */
 
     const main = document.querySelector('main');
-    const thead = document.querySelector('thead');
     const nav_icons = document.querySelectorAll('#dashboard-buttons img');
+    /* Using ResizeObserver to regulate the sizes is not really needed. I could
+    have done it from the css file. But, it's a while I wanted to try API. */
     const resize_observer = new ResizeObserver(entries => 
-    {
+    {        
         for (let entry of entries) {
-            thead.style.fontSize = `${Math.max(1, entry.contentRect.width / 1000)}rem`;
-            tbody.style.fontSize = `${Math.max(.9, entry.contentRect.width / 1050)}rem`;
+            table.tHead.style.fontSize = `${Math.max(1, entry.contentRect.width / 1000)}rem`;
+            table.tBodies[0].style.fontSize = `${Math.max(.9, entry.contentRect.width / 1050)}rem`;
             nav_icons.forEach(icon => {
-                icon.style.width = `${Math.max(2.5, entry.contentRect.width / 400)}rem`;
+                icon.style.width = `${Math.max(2.5, entry.contentRect.width / 457)}rem`; // max width: 3.5rem
             });
         }
     });
@@ -189,7 +196,7 @@ async function dashboard()
     resize_observer.observe(main);
 }
 
-async function load_dashboard_data(tbody, tr_template, feedback) 
+async function load_dashboard_data(table, no_checks_display, tr_template, feedback) 
 {
     let { status_code, payload } = await client_request(undefined, 'api/check/all', 'GET', undefined, undefined);
 
@@ -198,7 +205,14 @@ async function load_dashboard_data(tbody, tr_template, feedback)
         return;
     }
 
-    for (let [check_id, check_obj] of Object.entries(payload)) {
+    let payload_entries = Object.entries(payload);
+    if (payload_entries.length > 0) {
+        table.style.display = 'flex';
+    } else {
+        no_checks_display.style.display = 'flex';
+    }
+    
+    for (let [check_id, check_obj] of payload_entries) {
         let check_tr = tr_template.content.cloneNode(true).querySelector('tr');
         check_tr.id = check_id;
         let req_time = 0;
@@ -216,11 +230,11 @@ async function load_dashboard_data(tbody, tr_template, feedback)
             }
         }
         check_tr.querySelector('.delta_time').textContent = res_time - req_time;
-        tbody.appendChild(check_tr);
+        table.tBodies[0].appendChild(check_tr);
     }
 }
 
-async function update_dashboard_data(tbody, tr_template, feedback, add_listener_to_check) 
+async function update_dashboard_data(table, no_checks_display, tr_template, feedback, select_check) 
 {
     let { status_code, payload } = await client_request(undefined, 'api/check/all', 'GET', undefined, undefined);
 
@@ -228,8 +242,17 @@ async function update_dashboard_data(tbody, tr_template, feedback, add_listener_
         feedback.textContent = 'Something went wrong while trying to retrieve checkss data.';
         return;
     }
+
+    let payload_entries = Object.entries(payload);
+    if (payload_entries.length > 0) {
+        table.style.display = 'flex';
+        no_checks_display.style.display = 'none';
+    } else {
+        table.style.display = 'none';
+        no_checks_display.style.display = 'flex';
+    }
     
-    for (let [check_id, check_obj] of Object.entries(payload)) {
+    for (let [check_id, check_obj] of payload_entries) {
         let check_tr = document.querySelector('#' + check_id);
         let new_check = false;
         if (!check_tr) {
@@ -237,8 +260,8 @@ async function update_dashboard_data(tbody, tr_template, feedback, add_listener_
             new_check = true;
             check_tr = tr_template.content.cloneNode(true).querySelector('tr');
             check_tr.id = check_id;
-            add_listener_to_check(check_tr);
-            tbody.appendChild(check_tr);
+            check_tr.addEventListener('click', select_check);
+            table.tBodies[0].appendChild(check_tr);
         }
         let req_time = 0;
         let res_time = 0;
@@ -279,10 +302,12 @@ function create_check()
 
         if (status_code === 200) {
             feedback.className = 'success-msg';
+            feedback.textContent = payload.Success;
         } else {
             feedback.className = 'error-msg';
+            feedback.textContent = payload.Error;
         }
-        feedback.textContent = JSON.stringify(payload);
+        feedback.style.display = 'block';
     });
 }
 
@@ -304,6 +329,7 @@ async function edit_check()
     if (status_code !== 200) {
         feedback.className = 'error-msg';
         feedback.textContent = 'Unable to retrieve the check data.';
+        feedback.style.display = 'block';
         return; // At this point, there is no point in allowing the user to modify a check if it is not possible to retrieve it
     }
 
@@ -355,45 +381,46 @@ async function edit_check()
 
 function fill_req_obj(req_obj, url, textarea, feedback) 
 {
-        let url_value = url.value.trim();
-        if (url_value.length < 1) {
-            feedback.className = 'error-msg';
-            feedback.textContent = 'Invalid url.';
-            return;
-        }
-        
+    let url_value = url.value.trim();
+    if (url_value.length < 1) {
+        feedback.className = 'error-msg';
+        feedback.textContent = 'Invalid url.';
+        return;
+    }
+    
     req_obj.url = url_value;
     req_obj.method = document.querySelector('input[name="method"]:checked')?.value;
-        
-        if (textarea.value) 
-        {
-            let format = document.querySelector('input[name="format"]:checked')?.value;
-            let text = textarea.value.trim();
-            if (text && format === 'json') {
-                text = textarea.value.replace(/[\s\n\r]+/g, '');
-                try {
-                    req_obj.payload = JSON.parse(text);
-                } catch (error) {
-                    feedback.className = 'error-msg';
-                    feedback.textContent = 'Invalid JSON for the payload.';
-                    return;
-                }
-            } 
-            else if (text && format === 'text/plain') {
-                req_obj.payload = text;
+    
+    if (textarea.value) 
+    {
+        let format = document.querySelector('input[name="format"]:checked')?.value;
+        let text = textarea.value.trim();
+        if (text && format === 'json') {
+            text = textarea.value.replace(/[\s\n\r]+/g, '');
+            try {
+                req_obj.payload = JSON.parse(text);
+            } catch (error) {
+                feedback.className = 'error-msg';
+                feedback.textContent = 'Invalid JSON for the payload.';
+                return;
             }
+        } 
+        else if (text && format === 'text/plain') {
+            req_obj.payload = text;
         }
+    }
 }
 
-async function checks_JSON() {
-    const feedback = document.querySelector('#feedback');
-
+async function checks_JSON() 
+{
     let { status_code, payload } = await client_request(undefined, 'api/check/all', 'GET', undefined, undefined);
     
     if (status_code === 200) {
         document.querySelector('pre').textContent = JSON.stringify(payload, undefined, 4);
     } else {
+        const feedback = document.querySelector('#feedback');
         feedback.className = 'error-msg';
         feedback.textContent = JSON.stringify(payload);
+        feedback.style.display = 'block';
     }
 }

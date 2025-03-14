@@ -9,12 +9,23 @@ body {
     justify-content: center;
     min-height: 100vh;
     background-color: rgb(227, 227, 227);
-    background-image: url(./icons/sphere-grid.svg);
+    background-image: url(../assets/icons/sphere-grid.svg);
     background-repeat: no-repeat;
     background-size: cover;
+    color: rgb(24, 24, 24);
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 
-p, a, pre {
+.main-container {
+    background-color: rgb(237, 237, 237);
+    border-radius: 2rem;
+    padding: min(2rem, 2vw);
+    margin-top: 2.5vh;
+    border: 1px solid rgb(151, 151, 151);
+    box-shadow: 0 5px 10px -2px grey;
+}
+
+p, a, pre, button {
     font-size: 1.2rem;
 }
 
@@ -23,11 +34,57 @@ button {
     border: none;
 }
 
+.button-style {
+    background-color: rgb(216, 216, 216);
+    box-shadow: 0 3px 3px rgb(75, 75, 75);
+}
+
+.button-style.enabled:hover {
+    background-color: rgb(228, 228, 228);
+}
+
+.button-style.enabled:active {
+    box-shadow: 0 0px 1px rgb(43, 43, 43);
+}
+
+.button-style[aria-disabled=true] {
+    background-color: rgb(171, 171, 171);
+}
+
+#feedback {
+    font-weight: 500;
+    font-size: 1.5rem;
+    padding-block: 1.25rem;
+    width: 100%;
+    text-align: center;
+    display: none;
+}
+
 .error-msg {
     color: rgb(154, 15, 15);
 }
 
 .success-msg {
     color: green;
+}
+
+.go-back-arrow {
+    color: #1a1a1a;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    font-size: 1.15rem;
+    padding: .5em;
+    width: fit-content;
+    border-radius: calc(1.15rem + 2*.5em);
+}
+
+.go-back-arrow:hover {
+    background-color: rgb(228, 228, 228);
+}
+
+.go-back-arrow img {
+    width: 2rem;
 }
 
