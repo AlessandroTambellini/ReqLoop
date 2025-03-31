@@ -137,10 +137,7 @@ async function dashboard()
     }
     
     document.addEventListener('click', e => {  
-        if (!e.target.classList.contains('data-cell') 
-            && e.target !== delete_check_btn && e.target.parentElement !== delete_check_btn
-            && e.target !== edit_check_link && e.target.parentElement !== edit_check_link)      
-        {
+        if (!e.target.classList.contains('data-cell')) {
             selected_check?.classList.remove('active');
             selected_check = null;
             toggle_buttons(false);
@@ -152,7 +149,12 @@ async function dashboard()
         table.tBodies[0].children[i].addEventListener('click', select_check);
     }
 
-    delete_check_btn.addEventListener('click', async () => {
+    edit_check_link.addEventListener('click', e => {
+        e.stopPropagation();
+    });
+
+    delete_check_btn.addEventListener('click', async e => {
+        e.stopPropagation();
         if (selected_check) {
             let { status_code, payload } = await client_request(undefined, 'api/check', 'DELETE', {'id':selected_check.id}, undefined);
             if (status_code === 200) {
