@@ -1,4 +1,4 @@
-![logo](assets/logo.png)
+![logo](assets/icons/logo.png)
 # ReqLoop
 Build requests (url, method, payload) and let them being executed in the background.  
 You can monitor, create, edit and delete them from the web interface.  
