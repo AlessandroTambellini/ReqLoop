@@ -1,29 +1,40 @@
-const { setup_data_dir, store_checks_in_memory, write_checks_to_disk } = require("./lib/data.js");
+const data = require("./lib/data.js");
+const logs = require("./lib/logs.js");
 const { init_main_REPL } = require("./lib/repl.js");
 const { start_server } = require("./lib/server.js");
 const { start_background_workers } = require("./lib/workers.js");
 
 async function init_app() 
 {
-    let res = await setup_data_dir();
+    let res;
+    
+    res = await data.setup_dir();
     if (res.Error) {
         console.error('[ERROR]', res.Error);
         return;
+    } else {
+        console.log('[INFO]', res.Success);
     }
 
-    console.log('[INFO]', res.Success);
+    res = await logs.setup_dir();
+    if (res.Error) {
+        console.error('[ERROR]', res.Error);
+        return;
+    } else {
+        console.log('[INFO]', res.Success);
+    }
     
-    res = await store_checks_in_memory(); 
+    res = await data.store_checks_in_memory(); 
     if (res.Error) {
         console.error('[ERROR]', res.Error);
         return;        
-    } 
-    
-    console.log('[INFO]', res.Success);
+    } else {
+        console.log('[INFO]', res.Success);
+    }
     
     // Make sure it is possible to write back to disk,
     // Before starting the app
-    res = await write_checks_to_disk();
+    res = await data.write_checks_to_disk();
     if (res.Error) {
         console.error('[ERROR]', res.Error);
         return;
@@ -37,10 +48,10 @@ async function init_app()
 /* If the user kills the app while data is being written to disk,
 handle the killing signal, try again to write to disk and finally exit the process.
 In case of SIGKILL (kill -9), there is nothing I can do,
-and it that case the data is lost. */
+and it that case the data may be corrupted. */
 
 process.on('SIGINT', async () => {
-    let res = await write_checks_to_disk();
+    let res = await data.write_checks_to_disk();
     if (res.Error) {
         console.error('[ERROR]', res.Error);
     } else {
@@ -50,7 +61,7 @@ process.on('SIGINT', async () => {
 });
 
 process.on('SIGTERM', async () => {
-    let res = await write_checks_to_disk();
+    let res = await data.write_checks_to_disk();
     if (res.Error) {
         console.error('[ERROR]', res.Error);
     } else {

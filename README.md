@@ -90,7 +90,7 @@ So, to manipulate them, if you don't want to use the web interface, you can use 
 ### Main REPL and Seconday REPL
 For whatever reason (or accidentaly), you may close the repl. 
 To open it again type `open repl`. How does it work? Actually, when the repl is closed (that is the main one), a secondary repl is opened that just respond to that specific command.  
-The downside of this design is that to kill the app from the terminal you have to press 2 times `Ctrl+D` (kill both the REPLs) and then `Ctrl+C` (exit the process).
+The downside of this design is that **to kill the app from the terminal you have to press 2 times `Ctrl+D` (kill both the REPLs) and then `Ctrl+C` (exit the process)**.
 
 ## Why is there no database?
 There are few reasons why I decided not to store the checks in a real database:
@@ -99,10 +99,7 @@ There are few reasons why I decided not to store the checks in a real database:
 All the changes are saved in an in memory `Map` that is copied to disk once per minute.
 - **Simplicity**: you just need **Node.js** to run this app. **There are no dependencies of any kind** (both on the frontend and on the backend), including a database. 
 
-## Things you can add or improve
-Here is a TODO if you wanna play with the project:
-- Sanitize the checks JSON when retrieved from the disk. E.g. you may modify by hand that file and
-accidentaly invalidate some field. So, before storing it into the `Map` you can make sure all fields are valid (e.g. the check id has to be 20 chars long)
-- Add a history: for each request made, save the response, so to have a history of the responses
-and perhaps amplify it with graphs showing, for instance, how fast the response from the server was over time.
-- There are slight improvements that can be made in the web interface.
+### Considerations
+The cool thing about this approach is that you can't really corrupt the data while the app is running,
+because the data the app refers to is the one in memory. So, you can mess up with `checks.json`, but nothing bad happens.
+
