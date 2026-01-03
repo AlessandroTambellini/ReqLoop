@@ -215,6 +215,7 @@ async function load_dashboard_data(table, no_checks_display, tr_template, feedba
     }
     
     for (let [check_id, check_obj] of payload_entries) {
+        // document.importNode(template.content, true);
         let check_tr = tr_template.content.cloneNode(true).querySelector('tr');
         check_tr.id = check_id;
         let req_time = 0;

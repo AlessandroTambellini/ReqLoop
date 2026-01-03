@@ -93,11 +93,10 @@ To open it again type `open repl`. How does it work? Actually, when the repl is 
 The downside of this design is that **to kill the app from the terminal you have to press 2 times `Ctrl+D` (kill both the REPLs) and then `Ctrl+C` (exit the process)**.
 
 ## Why is there no database?
-There are few reasons why I decided not to store the checks in a real database:
-- **Legacy**: this is a project I developed by following a course few years ago and it did not use a database. This app is a reshaped and customized version of it.
+For a couple of reasons::
 - **Size of the data**: there is a limit of 100 checks and I write to disk as little as possible.
 All the changes are saved in an in memory `Map` that is copied to disk once per minute.
-- **Simplicity**: you just need **Node.js** to run this app. **There are no dependencies of any kind** (both on the frontend and on the backend), including a database. 
+- **Simplicity**: I don't want any dependency in this project, including a database. Only **Node.js** is required.
 
 ### Considerations
 The cool thing about this approach is that you can't really corrupt the data while the app is running,
