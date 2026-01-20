@@ -6,6 +6,12 @@ main {
     max-height: 95vh;
 }
 
+@media (min-width: 700px) {
+    main {
+        margin-block: 1ch;
+    }
+}
+
 table {
     overflow: hidden;
     border-spacing: 0;

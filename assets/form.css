@@ -12,16 +12,17 @@ form {
     padding: 1em;
 }
 
+input, button, label, textarea {
+    font: inherit;
+}
+
+input:default {
+    border: none;
+    outline: 2px solid deeppink;
+}
+
 form > * {
     width: 100%;
-}
-
-label, legend {
-    font-size: 1rem;
-}
-
-input, fieldset label, textarea, button {
-    font-size: 1.2rem;
 }
 
 label {

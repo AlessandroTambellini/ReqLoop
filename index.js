@@ -70,4 +70,6 @@ process.on('SIGTERM', async () => {
     process.exit(0);
 });
 
-init_app();
+if (require.main === module) {
+    init_app();
+}

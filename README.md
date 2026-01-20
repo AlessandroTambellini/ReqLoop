@@ -16,7 +16,7 @@ You can copy-paste the JSON below in the `./.data/checks.json` file to have a st
 ```JSON
 {
     "eqdg2xtszijz8s89fabu": {
-        "url": "https://en.wikipedia.org/wiki/Blake_Ross",
+        "url": "https://spidermonkey.dev/blog/",
         "method": "GET"
     },
     "gl7rvw6j9gk1ybmijc84": {
